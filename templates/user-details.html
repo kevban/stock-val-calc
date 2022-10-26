@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container text-center my-5">
+    <h1>{{user.username}}</h1>
+</div>
+<h2>{{user.username}}'s Forecasts</h2>
+<table class="table" id="forecast-table">
+    <thead>
+        <tr>
+            <th scope="col">Company</th>
+            <th scope="col">Date</th>
+            <th scope="col">Price Target</th>
+            <th scope="col">Position</th>
+            <th scope="col">Number of Ratings</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stock in covered_stocks %}
+        <tr>
+            <th scope="row"><a href="">{{stock.ticker}}</a></th>
+            <th scope="row">{{stock.date}}</th>
+            <th scope="row">{{stock.target}}</th>
+            <th scope="row">{{stock.recommendation}}</th>
+            <th scope="row"><a href="">{{stock.ratings}}</a></th>
+        </tr>
+        {%  endfor %}
+    </tbody>
+</table>
+{% if g.user.username == user.username %}
+<a href="/" class="btn btn-success">Make a new forecast</a>
+<a href="/logout" class="btn btn-danger">Log out</a>
+{% endif %}
+
+    
+{% endblock %}

@@ -2,7 +2,7 @@ from unittest import TestCase
 from app import app
 from models import db
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///blogly_test'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///stockval_test'
 
 db.drop_all()
 db.create_all()

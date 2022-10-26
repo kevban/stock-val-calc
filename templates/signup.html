@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<form id="signup" method="POST">
+    {{ form.hidden_tag() }} <!--add type=hidden form fields -->
+  
+    {% for field in form
+           if field.widget.input_type != 'hidden' %}
+  
+      <p>
+        {{ field.label }}
+        {{ field }}
+  
+        {% for error in field.errors %}
+          {{ error }}
+        {% endfor %}
+      </p>
+  
+    {% endfor %}
+      
+    {% if login %}
+    <button type="submit">Login</button>
+    <p>Don't have an account? <a href="/signup">Sigh up</a></p>
+    {% else %}
+    <button type="submit">Sign Up</button>
+    <p>Already have an account? <a href="/login">Log in</a></p>
+    {% endif %}
+    
+  </form>
+
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container text-center my-5">
+    <h1>{{data['ticker']}}</h1>
+</div>
+<div class="row">
+
+    <div class="col-6">
+        <h3>Historical</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">{{data['periods'][0].year}}</th>
+                    <th scope="col">{{data['periods'][1].year}}</th>
+                    <th scope="col">{{data['periods'][2].year}}</th>
+                    <th scope="col">{{data['periods'][3].year}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Revenue</th>
+                    <td>{{data['rev'][0]}}</td>
+                    <td>{{data['rev'][1]}}</td>
+                    <td>{{data['rev'][2]}}</td>
+                    <td>{{data['rev'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Cost of Revenue</th>
+                    <td>{{data['cogs'][0]}}</td>
+                    <td>{{data['cogs'][1]}}</td>
+                    <td>{{data['cogs'][2]}}</td>
+                    <td>{{data['cogs'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Gross Income</th>
+                    <td>{{data['rev'][0] - data['cogs'][0]}}</td>
+                    <td>{{data['rev'][1] - data['cogs'][1]}}</td>
+                    <td>{{data['rev'][2] - data['cogs'][2]}}</td>
+                    <td>{{data['rev'][3] - data['cogs'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Operating Expenses</th>
+                    <td>{{data['opex'][0]}}</td>
+                    <td>{{data['opex'][1]}}</td>
+                    <td>{{data['opex'][2]}}</td>
+                    <td>{{data['opex'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Earnings Before Depreciation (EBITDA)</th>
+                    <td>{{data['rev'][0] - data['cogs'][0] - data['opex'][0]}}</td>
+                    <td>{{data['rev'][1] - data['cogs'][1] - data['opex'][1]}}</td>
+                    <td>{{data['rev'][2] - data['cogs'][2] - data['opex'][2]}}</td>
+                    <td>{{data['rev'][3] - data['cogs'][3] - data['opex'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Depreciation</th>
+                    <td>{{data['depreciation'][0]}}</td>
+                    <td>{{data['depreciation'][1]}}</td>
+                    <td>{{data['depreciation'][2]}}</td>
+                    <td>{{data['depreciation'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Operating Income</th>
+                    <td>{{data['rev'][0] - data['cogs'][0] - data['opex'][0] - data['depreciation'][0]}}</td>
+                    <td>{{data['rev'][1] - data['cogs'][1] - data['opex'][1] - data['depreciation'][1]}}</td>
+                    <td>{{data['rev'][2] - data['cogs'][2] - data['opex'][2] - data['depreciation'][2]}}</td>
+                    <td>{{data['rev'][3] - data['cogs'][3] - data['opex'][3] - data['depreciation'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Other Revenue or Expenses</th>
+                    <td>{{data['other'][0]}}</td>
+                    <td>{{data['other'][1]}}</td>
+                    <td>{{data['other'][2]}}</td>
+                    <td>{{data['other'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Net Income Before Tax</th>
+                    <td>{{data['rev'][0] - data['cogs'][0] - data['opex'][0] - data['depreciation'][0] -
+                        data['other'][0]}}
+                    </td>
+                    <td>{{data['rev'][1] - data['cogs'][1] - data['opex'][1] - data['depreciation'][1] -
+                        data['other'][1]}}
+                    </td>
+                    <td>{{data['rev'][2] - data['cogs'][2] - data['opex'][2] - data['depreciation'][2] -
+                        data['other'][2]}}
+                    </td>
+                    <td>{{data['rev'][3] - data['cogs'][3] - data['opex'][3] - data['depreciation'][3] -
+                        data['other'][3]}}
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Income Tax Expense</th>
+                    <td>{{data['tax'][0]}}</td>
+                    <td>{{data['tax'][1]}}</td>
+                    <td>{{data['tax'][2]}}</td>
+                    <td>{{data['tax'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Net Income</th>
+                    <td>{{data['net_income'][0]}}</td>
+                    <td>{{data['net_income'][1]}}</td>
+                    <td>{{data['net_income'][2]}}</td>
+                    <td>{{data['net_income'][3]}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Shares Outstanding</th>
+                    <td>{{data['shares_out']}}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Earnings Per Share</th>
+                    <td>{{data['net_income'][0] / data['shares_out']}}</td>
+                    <td>{{data['net_income'][1] / data['shares_out']}}</td>
+                    <td>{{data['net_income'][2] / data['shares_out']}}</td>
+                    <td>{{data['net_income'][3] / data['shares_out']}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-6">
+        <h3>Forecast</h3>
+        <table class="table" id="forecast-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">{{data['periods'][3].year + 1}}E</th>
+                    <th scope="col">{{data['periods'][3].year + 2}}E</th>
+                    <th scope="col">{{data['periods'][3].year + 3}}E</th>
+                    <th scope="col">{{data['periods'][3].year + 4}}E</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Revenue</th>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="revenue1"></td>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="revenue2"></td>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="revenue3"></td>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="revenue4"></td>
+                </tr>
+                <tr>
+                    <th scope="row">Cost of Revenue</th>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="cogs1"></td>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="cogs2"></td>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="cogs3"></td>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="cogs4"></td>
+                </tr>
+                <tr>
+                    <th scope="row">Gross Income</th>
+                    <td><input type="text" class="form-control table-input" placeholder="" id="gross=income"></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Operating Expenses</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Earnings Before Depreciation (EBITDA)</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Depreciation</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Operating Income</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Other Revenue or Expenses</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Net Income Before Tax</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Income Tax Expense</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Net Income</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Shares Outstanding</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+                <tr>
+                    <th scope="row">Earnings Per Share</th>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                    <td><input type="text" class="form-control table-input" placeholder=""></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+{% endblock %}
