@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
-<div id="query-data" data-growth="{{query['growth']}}" data-margin="{{query['margin']}}" data-pe="{{query['pe']}}" data-user="{{user}}"></div>
+<div id="query-data" data-growth="{{query['growth']}}" data-margin="{{query['margin']}}" data-pe="{{query['pe']}}"
+    data-user="{{user}}"></div>
 <div class="container text-center my-5">
-    <h1 id="stock-ticker">{{data['ticker']}}</h1>
+    <h1 id="stock-ticker">{{data['ticker'][0]}}</h1>
 </div>
 <!-- <div class="row">
 
@@ -29,95 +30,150 @@
     </div>
     <div class="col-6"></div>
     <div class="col-3">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#save-forecast">Save Forecast</button>
+        <a class="btn btn-primary" id="save-forecast" data-bs-toggle="modal" href="#login-modal" role="button">Save Forecast</a>
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="save-forecast" tabindex="-1" role="dialog" aria-labelledby="save-forecast-title" aria-hidden="true">
-    <div class="modal-dialog save-forecast" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="form-title">Login</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-            <div class="container" id="form-flash-msgs">
-            </div>
-            <form method="POST" id="login-form">
-                {{ login_form.hidden_tag() }} <!--add type=hidden form fields -->
-              
-                {% for field in login_form
-                       if field.widget.input_type != 'hidden' %}
-              
-                  <p>
-                    {{ field.label }}
-                    {{ field }}
-              
-                    {% for error in field.errors %}
-                      {{ error }}
-                    {% endfor %}
-                  </p>
-              
-                {% endfor %}
-                  <div id="login">
-                <button type="submit" class="my-3">Login</button>
-                <p>Don't have an account? <a href="" id="switch-to-signup">Sign up</a></p>
-            </div>  
-            <div id="signup">
-                <button type="submit" class="my-3">Sign up</button>
-                <p>Already have an account? <a href="" id="switch-to-login">Log in</a></p>
-            </div>
-                
-              </form>
 
-              <form method="POST" id="save-form">
-                {{ save_form.hidden_tag() }} <!--add type=hidden form fields -->
-              
-                {% for field in save_form
-                       if field.widget.input_type != 'hidden' %}
-              
-                  <p>
-                    {{ field.label }}
-                    {{ field }}
-              
-                    {% for error in field.errors %}
-                      {{ error }}
+
+
+<!-- Modal -->
+<div class="modal fade" id="login-modal" tabindex="-1" aria-labelledby="login-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="login-modal-label">Login</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container" id="login-flash-msgs">
+                </div>
+                <form method="POST" id="login-form">
+                    {{ login_form.hidden_tag() }}
+                    <!--add type=hidden form fields -->
+
+                    {% for field in login_form
+                    if field.widget.input_type != 'hidden' %}
+
+                    <p>
+                        {{ field.label }}
+                        {{ field }}
+
+                        {% for error in field.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </p>
+
                     {% endfor %}
-                  </p>
-              
-                {% endfor %}
-                  <div id="login">
-                <button type="submit" class="my-3">Save Forecast</button>
-            </div>  
-                
-              </form>
-            
+                    <div id="login">
+                        <button type="submit" class="my-3">Login</button>
+                        <p>Don't have an account? <a href="" id="switch-to-signup" data-bs-target="#signup-modal"
+                                data-bs-toggle="modal" data-bs-dismiss="modal">Sign up</a></p>
+                    </div>
+                </form>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
+
+
+
+<div class="modal fade" id="signup-modal" aria-hidden="true" aria-labelledby="signup-modal-label" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="signup-modal-label">Sign up</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container" id="signup-flash-msgs">
+                </div>
+                <form method="POST" id="signup-form">
+                    {{ login_form.hidden_tag() }}
+                    <!--add type=hidden form fields -->
+
+                    {% for field in login_form
+                    if field.widget.input_type != 'hidden' %}
+
+                    <p>
+                        {{ field.label }}
+                        {{ field }}
+
+                        {% for error in field.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </p>
+
+                    {% endfor %}
+                    <div id="signup">
+                        <button type="submit" class="my-3">Sign up</button>
+                        <p>Already have an account? <a href="" id="switch-to-login" data-bs-target="#login-modal"
+                                data-bs-toggle="modal" data-bs-dismiss="modal">Log in</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="save-modal" aria-hidden="true" aria-labelledby="save-modal-label" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="signup-modal-label">Save Forecast</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container" id="signup-flash-msgs">
+                </div>
+                <form method="POST" id="save-form">
+                    {{ save_form.hidden_tag() }}
+                    <!--add type=hidden form fields -->
+                
+                    {% for field in save_form
+                    if field.widget.input_type != 'hidden' %}
+                
+                    <p>
+                        {{ field.label }}
+                        {{ field }}
+                
+                        {% for error in field.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </p>
+                
+                    {% endfor %}
+                    <div id="login">
+                        <button type="submit" class="my-3">Save Forecast</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 <h2>Financials</h2>
 <table class="table" id="forecast-table">
     <thead>
         <tr>
             <th scope="col">#</th>
-            <th scope="col">{{data['periods'][0].year}}</th>
-            <th scope="col">{{data['periods'][1].year}}</th>
-            <th scope="col">{{data['periods'][2].year}}</th>
-            <th scope="col">{{data['periods'][3].year}}</th>
-            <th scope="col">{{data['periods'][3].year + 1}}E</th>
-            <th scope="col">{{data['periods'][3].year + 2}}E</th>
-            <th scope="col">{{data['periods'][3].year + 3}}E</th>
-            <th scope="col">{{data['periods'][3].year + 4}}E</th>
+            <th scope="col">{{data['period'][0]}}</th>
+            <th scope="col">{{data['period'][1]}}</th>
+            <th scope="col">{{data['period'][2]}}</th>
+            <th scope="col">{{data['period'][3]}}</th>
+            <th scope="col">{{data['period'][3] + 1}}E</th>
+            <th scope="col">{{data['period'][3] + 2}}E</th>
+            <th scope="col">{{data['period'][3] + 3}}E</th>
+            <th scope="col">{{data['period'][3] + 4}}E</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <th scope="row">Revenue</th>
+            <th scope="row">Revenue <i class="fa-solid fa-circle-question" data-bs-toggle="popover" data-bs-title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?"></i></button></th>
             <td id="hist-revenue0" class="hist">{{data['revenue'][0]}}</td>
             <td id="hist-revenue1" class="hist">{{data['revenue'][1]}}</td>
             <td id="hist-revenue2" class="hist">{{data['revenue'][2]}}</td>
@@ -253,6 +309,17 @@
             <td class='calc net-income' id="net-income2"></td>
             <td class='calc net-income' id="net-income3"></td>
         </tr>
+        <tr>
+            <th scope="row">Dividends</th>
+            <td id="hist-dividend0" class="hist">{{data['dividend'][0]}}</td>
+            <td id="hist-dividend1" class="hist">{{data['dividend'][1]}}</td>
+            <td id="hist-dividend2" class="hist">{{data['dividend'][2]}}</td>
+            <td id="hist-dividend3" class="hist">{{data['dividend'][3]}}</td>
+            <td><input type="text" class="form-control table-input dividend" placeholder="" id="dividend0"></td>
+            <td><input type="text" class="form-control table-input dividend" placeholder="" id="dividend1"></td>
+            <td><input type="text" class="form-control table-input dividend" placeholder="" id="dividend2"></td>
+            <td><input type="text" class="form-control table-input dividend" placeholder="" id="dividend3"></td>
+        </tr>
     </tbody>
 </table>
 <div class="row my-3">
@@ -261,16 +328,24 @@
         <table class="table" id="valuation-table">
             <tbody>
                 <tr>
-                    <th scope="row">P/E ratio</th>
+                    <th scope="row">Exit multiple</th>
                     <td><input type="text" class="form-control val pe" placeholder="" id="pe"></td>
                 </tr>
                 <tr>
-                    <th scope="row">Forecasted EPS in {{data['periods'][3].year + 4}}</th>
+                    <th scope="row">Forecasted EPS in {{data['period'][3] + 4}}</th>
                     <td class='calc' id="eps3"></td>
                 </tr>
                 <tr>
-                    <th scope="row">Implied Share price</th>
+                    <th scope="row">Implied Share price at {{data['period'][3] + 4}}</th>
                     <td class='val' id="price"></td>
+                </tr>
+                <tr>
+                    <th scope="row">Total dividends per share</th>
+                    <td class='val' id="divtot"></td>
+                </tr>
+                <tr>
+                    <th scope="row">Target Share price</th>
+                    <td class='val' id="target"></td>
                 </tr>
                 <tr>
                     <th scope="row">Annualized return</th>

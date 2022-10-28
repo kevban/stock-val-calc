@@ -1,8 +1,10 @@
+from __future__ import division
 from http.client import PRECONDITION_FAILED, PRECONDITION_REQUIRED
 from flask_sqlalchemy import SQLAlchemy
 from findata import get_price, get_stock_data
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from helper import format_num
 
 
 """Models for stockval."""
@@ -25,12 +27,12 @@ class Stock(db.Model):
 
     ticker = db.Column(db.String, primary_key=True)
 
-    shares_out = db.Column(db.BigInteger, nullable=False)
-    eps_estimate = db.Column(db.Float)
-    rev_estimate = db.Column(db.BigInteger)
+    shares_out = db.Column(db.BigInteger)
+    rev_estimate = db.Column(db.Float)
     price_estimate_high = db.Column(db.Float)
     price_estimate_low = db.Column(db.Float)
     target_price = db.Column(db.Float)
+    type = db.Column(db.String)
     eps = db.Column(db.Float)
     beta = db.Column(db.Float)
     fifty_two_wk_low = db.Column(db.Float)
@@ -38,6 +40,7 @@ class Stock(db.Model):
     de_ratio = db.Column(db.Float)
     market_cap = db.Column(db.BigInteger)
     ev_ebitda = db.Column(db.Float)
+    ev_sales = db.Column(db.Float)
     ps_ratio = db.Column(db.Float)
     pe_ratio = db.Column(db.Float)
     pb_ratio = db.Column(db.Float)
@@ -57,11 +60,11 @@ class Stock(db.Model):
             stock = Stock(
                 ticker=stock_data['ticker'],
                 shares_out=stock_data['shares_out'],
-                eps_estimate=stock_data['eps_estimate'],
                 rev_estimate=stock_data['rev_estimate'],
                 price_estimate_high=stock_data['price_estimate_high'],
                 price_estimate_low=stock_data['price_estimate_low'],
-                target_price=stock_data['price_estimate_low'],
+                target_price=stock_data['target_price'],
+                type=stock_data['type'],
                 eps=stock_data['eps'],
                 beta=stock_data['beta'],
                 fifty_two_wk_low=stock_data['fifty_two_wk_low'],
@@ -69,6 +72,7 @@ class Stock(db.Model):
                 de_ratio=stock_data['de_ratio'],
                 market_cap=stock_data['market_cap'],
                 ev_ebitda=stock_data['ev_ebitda'],
+                ev_sales=stock_data['ev_sales'],
                 ps_ratio=stock_data['ps_ratio'],
                 pe_ratio=stock_data['pe_ratio'],
                 pb_ratio=stock_data['pb_ratio'],
@@ -82,7 +86,8 @@ class Stock(db.Model):
                     company_ticker=ticker, period=stock_data['periods'][i].year,
                     revenue=stock_data['revenue'][i], cogs=stock_data['cogs'][i],
                     opex=stock_data['opex'][i], depreciation=stock_data['depreciation'][i],
-                    other=stock_data['other'][i], tax=stock_data['tax'][i], net_income=stock_data['net_income'][i])
+                    other=stock_data['other'][i], tax=stock_data['tax'][i], net_income=stock_data['net_income'][i],
+                    dividend=-stock_data['dividend'][i])
                 db.session.add(financial)
             db.session.add(stock)
             db.session.commit()
@@ -102,7 +107,8 @@ class Stock(db.Model):
             'depreciation': [],
             'other': [],
             'tax': [],
-            'net_income': []
+            'net_income': [],
+            'dividend': []
         }
         for financial in self.financials:
             serialized = financial.serialize()
@@ -113,10 +119,26 @@ class Stock(db.Model):
             "ticker": self.ticker,
             "financials": financials,
             "shares_out": self.shares_out,
-            "eps_estimate": self.eps_estimate,
             "rev_estimate": self.rev_estimate,
             "price_estimate_high": self.price_estimate_high,
-            "price_estimate_low": self.price_estimate_low
+            "price_estimate_low": self.price_estimate_low,
+            "target_price": self.target_price,
+            "eps": self.eps,
+            "type": self.type,
+            "beta": self.beta,
+            "fifty_two_wk_low": self.fifty_two_wk_low,
+            "fifty_two_wk_high": self.fifty_two_wk_high,
+            "de_ratio": self.de_ratio,
+            "market_cap": self.market_cap,
+            "ev_ebitda": self.ev_ebitda,
+            "ev_sales": self.ev_sales,
+            "ps_ratio": self.ps_ratio,
+            "pe_ratio": self.pe_ratio,
+            "pb_ratio": self.pb_ratio,
+            "two_hundred_day_ma": self.two_hundred_day_ma,
+            "fifty_day_ma": self.fifty_day_ma,
+            "avg_volume": self.avg_volume,
+            "avg_volume_10d": self.avg_volume_10d
         }
 
     @classmethod
@@ -127,6 +149,7 @@ class Stock(db.Model):
 
         """
 
+        ticker = ticker.upper()
         stock = cls.query.get(ticker)
         if stock:
             stock.price = get_price(ticker)
@@ -135,6 +158,45 @@ class Stock(db.Model):
             return stock
         else:
             return cls.add_stock(ticker)
+
+    def get_forecast_data(self):
+        """Return a summary of user forecasts"""
+
+        count = 0
+        summary = {
+            'growth': 0,
+            'target': 0,
+            'cogs': 0,
+            'opex': 0,
+            'depreciation': 0,
+            'other': 0,
+            'tax': 0,
+            'dividend': 0,
+            'pe': 0,
+            'count': 0
+        }
+
+        for forecast in self.user_forecasts:
+            count += 1
+            summary['growth'] += forecast.growth
+            summary['target'] += forecast.target
+            summary['cogs'] += 1 - forecast.cogs
+            summary['opex'] += forecast.opex
+            summary['depreciation'] += forecast.depreciation
+            summary['other'] += forecast.other
+            summary['tax'] += forecast.tax
+            summary['dividend'] += forecast.dividend
+            summary['pe'] += forecast.pe
+
+        if count > 0:
+            for k in summary.keys():
+                summary[k] /= count
+                if k != 'target':
+                    summary[k] = summary[k] * 100
+                summary[k] = format_num(summary[k])
+
+            summary['count'] = count
+        return summary
 
 
 class Financial(db.Model):
@@ -151,6 +213,7 @@ class Financial(db.Model):
     other = db.Column(db.BigInteger)
     tax = db.Column(db.BigInteger)
     net_income = db.Column(db.BigInteger)
+    dividend = db.Column(db.BigInteger)
 
     company = db.relationship('Stock', backref='financials')
 
@@ -166,7 +229,8 @@ class Financial(db.Model):
             'depreciation': self.depreciation,
             'other': self.other,
             'tax': self.tax,
-            'net_income': self.net_income
+            'net_income': self.net_income,
+            'dividend': self.dividend
         }
 
 
@@ -259,6 +323,34 @@ class User(db.Model):
             dict_to_return[forecast.ticker].append(forecast.serialize())
         return dict_to_return
 
+    def get_forecast_summary(self):
+        """Get a summary of user forecasts by stock in a list"""
+
+        user_forecasts = self.get_forecast()
+        covered_stocks = []
+
+        for k in user_forecasts.keys():
+            price = get_price(k)
+            recommendation = 'Buy'
+            stock = {}
+            stock['target'] = 0
+            stock['ticker'] = k
+            total_weight = 0
+            count = 0
+            for v in user_forecasts[k]:
+                stock['date'] = v['date']
+                stock['target'] = stock['target'] + v['target'] * v['weight']
+                total_weight += v['weight']
+                count += 1
+
+            stock['target'] /= total_weight
+            if stock['target'] < price['hist_30d_prices'][len(price['hist_30d_prices']) - 1]:
+                recommendation = 'Sell'
+            stock['recommendation'] = recommendation
+            stock['ratings'] = count
+            covered_stocks.append(stock)
+        return covered_stocks
+
 
 class Forecast(db.Model):
     __tablename__ = 'forecasts'
@@ -267,11 +359,22 @@ class Forecast(db.Model):
         'users.username'), nullable=False)
     ticker = db.Column(db.String, db.ForeignKey(
         'stocks.ticker'), nullable=False)
-    target = db.Column(db.Float)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     name = db.Column(db.String)
     description = db.Column(db.String)
     weight = db.Column(db.Float, default=1)
+
+    # key stats about the forecast
+    target = db.Column(db.Float)
+    growth = db.Column(db.Float)
+    cogs = db.Column(db.Float)
+    opex = db.Column(db.Float)
+    depreciation = db.Column(db.Float)
+    other = db.Column(db.Float)
+    tax = db.Column(db.Float)
+    net_income = db.Column(db.Float)
+    dividend = db.Column(db.Float)
+    pe = db.Column(db.Float)
 
     user = db.relationship('User', backref='forecasts')
     stock = db.relationship('Stock', backref='user_forecasts')
@@ -279,7 +382,20 @@ class Forecast(db.Model):
     @classmethod
     def save_forecast(cls, forecasts, username):
         new_forecast = Forecast(
-            username=username, ticker=forecasts['ticker'], target=forecasts['price'], name=forecasts['name'], description=forecasts['description'])
+            username=username,
+            ticker=forecasts['ticker'],
+            target=forecasts['target'],
+            name=forecasts['name'],
+            description=forecasts['description'],
+            growth=forecasts['avg-growth'],
+            cogs=forecasts['avg-cogs'],
+            opex=forecasts['avg-opex'],
+            depreciation=forecasts['avg-depreciation'],
+            other=forecasts['avg-other'],
+            tax=forecasts['avg-tax'],
+            dividend=forecasts['avg-dividend'],
+            pe=forecasts['pe'],
+        )
         db.session.add(new_forecast)
         db.session.commit()
         for i in range(len(forecasts['period'])):
@@ -291,7 +407,8 @@ class Forecast(db.Model):
                                                     depreciation=forecasts['depreciation'][i],
                                                     other=forecasts['other'][i],
                                                     tax=forecasts['tax'][i],
-                                                    net_income=forecasts['net-income'][i])
+                                                    net_income=forecasts['net-income'][i],
+                                                    dividend=forecasts['dividend'][i])
             db.session.add(forecast_financial)
         db.session.commit()
         return new_forecast.serialize()
@@ -299,8 +416,11 @@ class Forecast(db.Model):
     def serialize(self):
         """Return a dictionary representation of the forecast"""
         financials = {
+            'id': self.id,
             'ticker': self.ticker,
             'user': self.username,
+            'description': self.description,
+            'name': self.name,
             'date': self.date,
             'target': self.target,
             'weight': self.weight,
@@ -311,7 +431,8 @@ class Forecast(db.Model):
             'depreciation': [],
             'other': [],
             'tax': [],
-            'net_income': []
+            'net_income': [],
+            'dividend': []
         }
         for financial in self.forecast_financials:
             serialized = financial.serialize()
@@ -334,6 +455,7 @@ class ForecastFinancials(db.Model):
     other = db.Column(db.BigInteger)
     tax = db.Column(db.BigInteger)
     net_income = db.Column(db.BigInteger)
+    dividend = db.Column(db.BigInteger)
 
     forecast = db.relationship('Forecast', backref='forecast_financials')
 
@@ -346,5 +468,6 @@ class ForecastFinancials(db.Model):
             'depreciation': self.depreciation,
             'other': self.other,
             'tax': self.tax,
-            'net_income': self.net_income
+            'net_income': self.net_income,
+            'dividend': self.dividend
         }

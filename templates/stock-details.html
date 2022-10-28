@@ -1,157 +1,196 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="row">
-    <div class="col-3"></div>
-    <div class="display-2 col-6 my-3 text-center" id="stock=ticker">{{data['ticker'] | safe}}<span
-            class="display-5 mx-3">{{cur_price}}</span></div>
-    <div class="col-3 d-flex align-items-center">
-        <a href="/search/{{data['ticker']}}//valuation/start" class="btn btn-primary">Start Valuation</a>
-    </div>
+<div class="container-xxl">
+        <div class="display-2 my-3" id="stock=ticker">{{data['ticker'] | safe}}<span
+                class="display-5 mx-3">{{cur_price}}</span></div>
+
 </div>
-<div class="container">
-    <div class="container col-8">
-
-
-        <canvas id="chart"></canvas>
-        <script>
-            const chart = document.querySelector('#chart').getContext("2d");
-            const chart_data = {
-                labels: {{ price["hist_30d_dates"] | safe }},
-            datasets: [
-                {
-                    label: "Closing Price:",
-                    data: {{ price['hist_30d_prices']}},
-                lineTension: 0.1,
-                backgroundColor: 'rgba(11, 100, 118, 1)',
-                borderColor: 'rgba(11, 100, 118, 1)',
-                yAxisID: 'y'
+<div class="container-xxl">
+    <div class="row">
+        <div class="col-8">
+            <h4>{{data['ticker']}} Price and Volume Chart</h4>
+            <canvas id="chart"></canvas>
+            <script>
+                const chart = document.querySelector('#chart').getContext("2d");
+                const chart_data = {
+                    labels: {{ price["hist_30d_dates"] | safe }},
+                datasets: [
+                    {
+                        label: "Closing Price:",
+                        data: {{ price['hist_30d_prices']}},
+                    lineTension: 0.1,
+                    backgroundColor: 'rgba(11, 100, 118, 1)',
+                    borderColor: 'rgba(11, 100, 118, 1)',
+                    yAxisID: 'y'
                 },
-                {
-                    label: 'Daily Volume',
-                    data: {{ price['hist_30d_volumes']}},
-                stack: 'combined',
-                type: 'bar',
-                backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                yAxisID: 'y1'
+                    {
+                        label: 'Daily Volume',
+                        data: {{ price['hist_30d_volumes']}},
+                    stack: 'combined',
+                    type: 'bar',
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                    yAxisID: 'y1'
                     }
-            ]};
-            const config = {
-                type: 'line',
-                data: chart_data,
-                options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    stacked: true,
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left'
+                ]};
+                const config = {
+                    type: 'line',
+                    data: chart_data,
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
                         },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: {
-                                drawOnChartArea: false, // only want the grid lines for one axis to show up
+                        stacked: true,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left'
                             },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false, // only want the grid lines for one axis to show up
+                                },
+                            }
                         }
                     }
-                }
-            };
-            const lineChart = new Chart(chart, config);
-        </script>
-    </div>
-    <div class="container col-4">
+                };
+                const lineChart = new Chart(chart, config);
+            </script>
 
-    </div>
 
-</div>
-<div class="row">
+        </div>
+        
+        <div class="col-4">
+            <h4>{{data['ticker']}} User Analysis</h4>
+            {% if equity %}
+            <div class="text-center">
+                <a href="/search/{{data['ticker']}}/valuation/start" class="btn btn-primary start-val-btn">Start Your Valuation</a>
+            </div>
+            <div class="row row-cols-2">
+                <div class="col my-2">
+                    <div class="card user-analysis">
+                        <div class="card-body">
+                            <h5 class="card-title">{{forecast_data.growth}}%</h5>
+                            <p class="card-text">Average Revenue Growth Rate From User Forecast
+                            </p>
+                            <p class="card-text">vs. Wallstreet Consensus {{data.rev_estimate}}%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col my-2">
+                    <div class="card user-analysis">
+                        <div class="card-body">
+                            <h5 class="card-title">{{forecast_data.cogs}}%</h5>
+                            <p class="card-text">Average Gross Margin From User Forecast
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="container">
-        <div class="row my-5">
-            <table class="table col mx-3">
-                <tbody>
-                    <tr>
-                        <td class="fw-bold">Target Price</td>
-                        <td>{{data['target_price'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Shares Outstanding</td>
-                        <td>{{data['shares_out'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">EPS (TTM)</td>
-                        <td>{{data['eps'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Beta</td>
-                        <td>{{data['beta'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">52 wk range</td>
-                        <td>{{data['fifty_two_wk_low'] | safe}} - {{data['fifty_two_wk_high'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Debt to Equity</td>
-                        <td>{{data['de_ratio'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Market Cap (Billions)</td>
-                        <td>{{data['market_cap'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Average Volume</td>
-                        <td>{{data['avg_volume'] | safe}}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <table class="table col mx-3">
-                <tbody>
-                    <tr>
-                        <td class="fw-bold">EV/EBITDA</td>
-                        <td>{{data['ev_ebitda'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">EV/Sales</td>
-                        <td>{{data['ev_sales'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Price to book</td>
-                        <td>{{data['pb_ratio'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Price to earnings (TTM)</td>
-                        <td>{{data['pe_ratio'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">Price to sales (TTM)</td>
-                        <td>{{data['ps_ratio'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">PEG ratio</td>
-                        <td>{{data['peg_ratio'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">200d Moving Avg</td>
-                        <td>{{data['two_hundred_day_ma'] | safe}}</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">200d Moving Avg</td>
-                        <td>{{data['fifty_day_ma'] | safe}}</td>
-                    </tr>
-                </tbody>
-            </table>
+                <div class="col my-2">
+                    <div class="card user-analysis">
+                        <div class="card-body">
+                            <h5 class="card-title">{{forecast_data.count}}</h5>
+                            <p class="card-text">Total user forecasts
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col my-2">
+                    <div class="card user-analysis">
+                        <div class="card-body">
+                            <h5 class="card-title">${{forecast_data.target}}</h5>
+                            <p class="card-text">Average Price Target From User Forecast
+                            </p>
+                            <p class="card-text">vs. Wallstreet Consensus ${{data.target_price}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
 </div>
+{% else %}
+<p>{{data['ticker']}} is not an equity stock, please search another ticker to conduct a valuation.</p>
+{% endif %}
 </div>
 
+<div class="container-xxl">
+    <h5>{{data['ticker']}} Statistics</h5>
+    <div class="row my-5">
+        <table class="table col mx-3">
+            <tbody>
+                <tr>
+                    <td class="fw-bold">Shares Outstanding</td>
+                    <td>{{data['shares_out'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">EPS (TTM)</td>
+                    <td>{{data['eps'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Beta</td>
+                    <td>{{data['beta'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">52 wk range</td>
+                    <td>{{data['fifty_two_wk_low'] | safe}} - {{data['fifty_two_wk_high'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Debt to Equity</td>
+                    <td>{{data['de_ratio'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Market Cap (Billions)</td>
+                    <td>{{data['market_cap'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Average Volume</td>
+                    <td>{{data['avg_volume'] | safe}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table col mx-3">
+            <tbody>
+                <tr>
+                    <td class="fw-bold">EV/EBITDA</td>
+                    <td>{{data['ev_ebitda'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">EV/Sales</td>
+                    <td>{{data['ev_sales'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Price to book</td>
+                    <td>{{data['pb_ratio'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Price to earnings (TTM)</td>
+                    <td>{{data['pe_ratio'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Price to sales (TTM)</td>
+                    <td>{{data['ps_ratio'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">200d Moving Avg</td>
+                    <td>{{data['two_hundred_day_ma'] | safe}}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">50d Moving Avg</td>
+                    <td>{{data['fifty_day_ma'] | safe}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
 
 {% block script %}

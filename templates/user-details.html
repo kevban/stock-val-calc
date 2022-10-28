@@ -17,11 +17,11 @@
     <tbody>
         {% for stock in covered_stocks %}
         <tr>
-            <th scope="row"><a href="">{{stock.ticker}}</a></th>
+            <th scope="row"><a href="/search/{{stock.ticker}}">{{stock.ticker}}</a></th>
             <th scope="row">{{stock.date}}</th>
             <th scope="row">{{stock.target}}</th>
             <th scope="row">{{stock.recommendation}}</th>
-            <th scope="row"><a href="">{{stock.ratings}}</a></th>
+            <th scope="row"><a href="/user/{{user.username}}/forecast/{{stock.ticker}}">{{stock.ratings}}</a></th>
         </tr>
         {%  endfor %}
     </tbody>

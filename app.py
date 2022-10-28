@@ -1,3 +1,4 @@
+from ast import Num
 from flask import Flask, render_template, redirect, request, jsonify, session, flash, g
 from models import *
 from forms import StockValQuestionaire, LoginForm, SaveForecastForm
@@ -76,31 +77,37 @@ def logout():
 @app.route('/user/<username>')
 def user_details(username):
     user = User.query.get(username)
-    user_forecasts = user.get_forecast()
-    covered_stocks = []
-    
-    for k in user_forecasts.keys():
-        price = get_price(k)
-        recommendation = 'Buy'
-        stock = {}
-        stock['target'] = 0
-        stock['ticker'] = k
-        total_weight = 0
-        count = 0
-        for v in user_forecasts[k]:
-            stock['date'] = v['date']
-            stock['target'] = stock['target'] + v['target'] * v['weight']
-            total_weight += v['weight']
-            count += 1
-        
-        if stock['target'] < price['hist_30d_prices'][len(price['hist_30d_prices']) - 1]:
-            recommendation = 'Sell'
-        stock['recommendation'] = recommendation
-        stock['target'] /= total_weight
-        stock['ratings'] = count
-        covered_stocks.append(stock)
-    return render_template('user-details.html', user=user, covered_stocks=covered_stocks, g=g)
+    if user:
+        covered_stocks=user.get_forecast_summary()
+        return render_template('user-details.html', user=user, covered_stocks=covered_stocks, g=g)
+    else:
+        return render_template('notfound.html', term=username)
 
+@app.route('/user/<username>/forecast/<ticker>')
+def user_forecast_details(username, ticker):
+    user = User.query.get(username)
+    forecasts = user.get_forecast().get(ticker, None)
+    return render_template('user-forecast-details.html', forecasts=forecasts, g=g, user=user, ticker=ticker)
+
+@app.route('/forecast/<int:forecast_id>')
+def display_forecsat(forecast_id):
+    forecast = Forecast.query.get(forecast_id)
+    if forecast:
+        return render_template('forecast-details.html', forecast=forecast)
+    else:
+        return render_template('notfound.html', term='This forecast')
+
+@app.route('/user/<username>/forecast/<ticker>/update-weighting', methods=['POST'])
+def update_weighting(username, ticker):
+    user = User.query.get(username)
+    forecasts = user.get_forecast().get(ticker, None)
+    for forecast_dict in forecasts:
+        forecast = Forecast.query.get(forecast_dict['id'])
+        forecast.weight = request.form[str(forecast_dict['id'])]
+        db.session.add(forecast)
+    db.session.commit()
+    flash("Weighting successfully updated", 'success')
+    return redirect(f'/user/{username}/forecast/{ticker}')
 
 @app.route('/search', methods=["POST"])
 def search():
@@ -110,11 +117,31 @@ def search():
 
 @app.route('/search/<ticker>')
 def display_stock(ticker):
-    data = Stock.get_stock(ticker)
-    price = get_price(ticker)
-    cur_price = format_num(price['hist_30d_prices'][len(price['hist_30d_prices']) - 1])
-    return render_template('stock-details.html', data=data, price=price,
-                           cur_price=cur_price)
+    stock = Stock.get_stock(ticker)
+    if stock:
+        stock_data = stock.serialize()
+        price = get_price(ticker)
+        cur_price = format_num(price['hist_30d_prices'][len(price['hist_30d_prices']) - 1])
+        equity = True
+        if stock_data['type'].upper() != 'EQUITY':
+            equity = False
+        user_forecast_data = stock.get_forecast_data()
+        for k in stock_data.keys():
+            if stock_data[k] == None:
+                stock_data[k] = 'N/A'
+                
+            elif not isinstance(stock_data[k], numbers.Number):
+                pass
+            elif k == 'rev_estimate':
+                stock_data[k] = "{:,.2f}".format(stock_data[k] * 100)
+            elif k == 'market_cap':
+                stock_data[k] = "{:,.2f}".format(stock_data[k] / 1000000000)
+            else:
+                stock_data[k] = "{:,.2f}".format(stock_data[k])
+        return render_template('stock-details.html', data=stock_data, price=price,
+                            cur_price=cur_price, forecast_data=user_forecast_data, equity=equity)
+    else:
+        return render_template('notfound.html', term=ticker)
 
 
 @app.route('/search/<ticker>/valuation/start', methods=["GET", "POST"])
@@ -130,13 +157,12 @@ def val_quickstart(ticker):
 
 @app.route('/search/<ticker>/valuation/summary')
 def val_summary(ticker):
-    data = get_stock_data(ticker)
+    stock = Stock.get_stock(ticker)
+    data = stock.serialize()
     query_str = request.args
     login_form = LoginForm()
     save_form = SaveForecastForm()
-    return render_template('stockcopy.html', data=data, query=query_str, login_form=login_form, save_form=save_form, user=g.user)
-
-
+    return render_template('stockcopy.html', data=data['financials'], query=query_str, login_form=login_form, save_form=save_form, user=g.user)
 
     
     

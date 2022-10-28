@@ -1,13 +1,8 @@
 import numbers
 
 
-def format_num(num, symbol='$', front=True):
-    """Get a number, return a string representation based on a format
-
-        symbol is the symbol to be added to the string
-
-        if front is True, symbol will be prepended
-        otherwise, format will be appended
+def format_num(num):
+    """Get a number, format it to 2 decimal points and return it.
 
         if not a number, return "N/A" instead
 
@@ -18,10 +13,7 @@ def format_num(num, symbol='$', front=True):
     # return the string
     if isinstance(num, numbers.Number):
         num_rep = "{:0,.2f}".format(num)
-        if front == True:
-            return symbol + num_rep
-        else:
-            return num_rep + symbol
+        return num_rep
     # if num is not a number, return N/A
     else:
         return 'N/A'
