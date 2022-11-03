@@ -11,9 +11,10 @@ from findata import *
 """stockval application."""
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///stockval'
+database_url = os.environ.get('SQLALCHEMY_URL', 'postgresql:///stockval')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'abc123'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'abc123')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
 
 connect_db(app)
