@@ -20,4 +20,4 @@ By searching any stock ticker, the app will quickly pull up historical financial
 - FinanceAPI - [yfinance](https://github.com/ranaroussi/yfinance)
 ## Other
 - This project was made for Springboard Capstone project 1
-- For questions related to the valuation methodology, please refer to [FAQ]
+- For questions related to the valuation methodology, please refer to [FAQ](https://github.com/kevban/stock-val-calc/blob/main/faq.md)
