@@ -1,10 +1,10 @@
-from ast import Num
 from flask import Flask, render_template, redirect, request, jsonify, session, flash, g
 from models import *
 from forms import LoginForm, SaveForecastForm
 from helper import format_num
 from sqlalchemy.exc import IntegrityError
 import datetime
+import os
 
 from findata import *
 
@@ -18,6 +18,8 @@ app.config['SECRET_KEY'] = 'abc123'
 
 connect_db(app)
 
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 
 @app.before_request
 def add_user_to_g():
