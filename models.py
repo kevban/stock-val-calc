@@ -1,5 +1,5 @@
 from __future__ import division
-from http.client import PRECONDITION_FAILED, PRECONDITION_REQUIRED
+from email.policy import default
 from flask_sqlalchemy import SQLAlchemy
 from findata import get_price, get_stock_data
 from flask_bcrypt import Bcrypt
@@ -48,7 +48,15 @@ class Stock(db.Model):
     fifty_day_ma = db.Column(db.Float)
     avg_volume = db.Column(db.BigInteger)
     avg_volume_10d = db.Column(db.BigInteger)
-
+    avg_growth = db.Column(db.Float)
+    avg_cogs = db.Column(db.Float)
+    avg_opex = db.Column(db.Float)
+    avg_depreciation = db.Column(db.Float)
+    avg_other = db.Column(db.Float)
+    avg_tax = db.Column(db.Float)
+    avg_dividend = db.Column(db.Float)
+    cur_price = db.Column(db.Float)
+    last_updated = db.Column(db.DateTime, default=datetime.today().replace(microsecond=0))
     @classmethod
     def add_stock(cls, ticker):
         """Add a stock to database given ticker, return it
@@ -80,6 +88,14 @@ class Stock(db.Model):
                 fifty_day_ma=stock_data['fifty_day_ma'],
                 avg_volume=stock_data['avg_volume'],
                 avg_volume_10d=stock_data['avg_volume_10d'],
+                avg_growth=stock_data['avg_growth'],
+                avg_cogs=stock_data['avg_cogs'],
+                avg_opex=stock_data['avg_opex'],
+                avg_depreciation=stock_data['avg_depreciation'],
+                avg_other=stock_data['avg_other'],
+                avg_tax=stock_data['avg_tax'],
+                avg_dividend=stock_data['avg_dividend'],
+                cur_price=stock_data['current_price']
             )
             for i in range(len(stock_data['periods'])):
                 financial = Financial(
@@ -138,12 +154,21 @@ class Stock(db.Model):
             "two_hundred_day_ma": self.two_hundred_day_ma,
             "fifty_day_ma": self.fifty_day_ma,
             "avg_volume": self.avg_volume,
-            "avg_volume_10d": self.avg_volume_10d
+            "avg_volume_10d": self.avg_volume_10d,
+            "avg_growth": self.avg_growth,
+            "avg_cogs": self.avg_cogs,
+            "avg_opex": self.avg_opex,
+            "avg_depreciation": self.avg_depreciation,
+            "avg_other": self.avg_other,
+            "avg_tax": self.avg_tax,
+            "avg_dividend": self.avg_dividend,
+            'cur_price': self.cur_price,
+            'last_updated': self.last_updated
         }
 
     @classmethod
     def get_stock(cls, ticker):
-        """Return the stock instance with the ticker. Update its current price.
+        """Return the stock instance given ticker.
 
             If ticker does not exist, add it to the database
 
@@ -152,12 +177,60 @@ class Stock(db.Model):
         ticker = ticker.upper()
         stock = cls.query.get(ticker)
         if stock:
-            stock.price = get_price(ticker)
-            db.session.add(stock)
-            db.session.commit()
             return stock
         else:
             return cls.add_stock(ticker)
+
+    def update_price(self):
+        """Update the stock price."""
+
+    def update_stock(self):
+        """Update the stock with new stock information retrieved form API
+        """
+        stock_data = get_stock_data(self.ticker)
+        self.ticker=stock_data['ticker'],
+        self.shares_out=stock_data['shares_out'],
+        self.rev_estimate=stock_data['rev_estimate'],
+        self.price_estimate_high=stock_data['price_estimate_high'],
+        self.price_estimate_low=stock_data['price_estimate_low'],
+        self.target_price=stock_data['target_price'],
+        self.type=stock_data['type'],
+        self.eps=stock_data['eps'],
+        self.beta=stock_data['beta'],
+        self.fifty_two_wk_low=stock_data['fifty_two_wk_low'],
+        self.fifty_two_wk_high=stock_data['fifty_two_wk_high'],
+        self.de_ratio=stock_data['de_ratio'],
+        self.market_cap=stock_data['market_cap'],
+        self.ev_ebitda=stock_data['ev_ebitda'],
+        self.ev_sales=stock_data['ev_sales'],
+        self.ps_ratio=stock_data['ps_ratio'],
+        self.pe_ratio=stock_data['pe_ratio'],
+        self.pb_ratio=stock_data['pb_ratio'],
+        self.two_hundred_day_ma=stock_data['two_hundred_day_ma'],
+        self.fifty_day_ma=stock_data['fifty_day_ma'],
+        self.avg_volume=stock_data['avg_volume'],
+        self.avg_volume_10d=stock_data['avg_volume_10d'],
+        self.avg_growth=stock_data['avg_growth'],
+        self.avg_cogs=stock_data['avg_cogs'],
+        self.avg_opex=stock_data['avg_opex'],
+        self.avg_depreciation=stock_data['avg_depreciation'],
+        self.avg_other=stock_data['avg_other'],
+        self.avg_tax=stock_data['avg_tax'],
+        self.avg_dividend=stock_data['avg_dividend'],
+        self.cur_price=stock_data['current_price'],
+        self.last_updated=datetime.today().replace(microsecond=0)
+        for financial in self.financials:
+            db.session.delete(financial)
+        for i in range(len(stock_data['periods'])):
+            financial = Financial(
+                company_ticker=self.ticker, period=stock_data['periods'][i].year,
+                revenue=stock_data['revenue'][i], cogs=stock_data['cogs'][i],
+                opex=stock_data['opex'][i], depreciation=stock_data['depreciation'][i],
+                other=stock_data['other'][i], tax=stock_data['tax'][i], net_income=stock_data['net_income'][i],
+                dividend=-stock_data['dividend'][i])
+            db.session.add(financial)
+        db.session.add(self)
+        db.session.commit()
 
     def get_forecast_data(self):
         """Return a summary of user forecasts"""
@@ -173,6 +246,7 @@ class Stock(db.Model):
             'tax': 0,
             'dividend': 0,
             'pe': 0,
+            'ps': 0,
             'count': 0
         }
 
@@ -180,13 +254,16 @@ class Stock(db.Model):
             count += 1
             summary['growth'] += forecast.growth
             summary['target'] += forecast.target
-            summary['cogs'] += 1 - forecast.cogs
+            summary['cogs'] += forecast.cogs
             summary['opex'] += forecast.opex
             summary['depreciation'] += forecast.depreciation
             summary['other'] += forecast.other
             summary['tax'] += forecast.tax
             summary['dividend'] += forecast.dividend
-            summary['pe'] += forecast.pe
+            if forecast.ps != -1:
+                summary['ps'] += forecast.pe
+            else:
+                summary['pe'] += forecast.ps
 
         if count > 0:
             for k in summary.keys():
@@ -375,6 +452,8 @@ class Forecast(db.Model):
     net_income = db.Column(db.Float)
     dividend = db.Column(db.Float)
     pe = db.Column(db.Float)
+    ps = db.Column(db.Float)
+    shares_out = db.Column(db.Float)
 
     user = db.relationship('User', backref='forecasts')
     stock = db.relationship('Stock', backref='user_forecasts')
@@ -395,6 +474,8 @@ class Forecast(db.Model):
             tax=forecasts['avg-tax'],
             dividend=forecasts['avg-dividend'],
             pe=forecasts['pe'],
+            ps=forecasts['ps'],
+            shares_out=forecasts['shares_out']
         )
         db.session.add(new_forecast)
         db.session.commit()
@@ -418,12 +499,22 @@ class Forecast(db.Model):
         financials = {
             'id': self.id,
             'ticker': self.ticker,
-            'user': self.username,
+            'username': self.username,
             'description': self.description,
             'name': self.name,
             'date': self.date,
             'target': self.target,
             'weight': self.weight,
+            'growth': self.growth,
+            'cogs': self.cogs,
+            'opex': self.opex,
+            'depreciation': self.depreciation,
+            'other': self.other,
+            'tax': self.tax,
+            'dividend:': self.dividend,
+            'pe': self.pe,
+            'ps': self.ps,
+            'shares_out': self.shares_out,
             'period': [],
             'revenue': [],
             'cogs': [],

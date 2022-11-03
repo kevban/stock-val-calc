@@ -2,12 +2,18 @@ let viewType = 0; // 0 is dollar amount, 1 is percent growth, 2 is percentage of
 let forecastPeriod = 4; // default to 4 forecast periods
 let histPeriod = 4; // default to 4 historic periods
 let ticker = $('#stock-ticker').text();
+let multipleType = 0;
 
 const signupForm = $('#signup-form');
 
 const loginForm = $('#login-form');
 const saveForm = $('#save-form');
 
+const multipleSelector = $('#multiple-selector');
+multipleSelector.on('change', 'input', function (evt) {
+    multipleType = evt.target.value;
+    RefreshView();
+});
 
 let forecastFinancials = {
     'revenue': [0, 0, 0, 0],
@@ -44,7 +50,6 @@ forecastTable.on("blur", ".table-input", UpdateFinancials);
 const viewToggle = $('#view-toggle');
 viewToggle.on('change', 'input', function (evt) {
     viewType = evt.target.value;
-    console.log(viewType);
     RefreshView();
 });
 
@@ -95,8 +100,6 @@ function UpdateNavBar(logged_in, username) {
     // update the navbar based on login status
 
     $('#navbar-left').empty();
-    let homeNav = $('<li>').attr('class', 'nav-item').appendTo($('#navbar-left'));
-    $('<a>').attr('href', '/').attr('class', 'nav-link').text('Home').appendTo(homeNav);
     if (logged_in) {
         let userNav = $('<li>').attr('class', 'nav-item').appendTo($('#navbar-left'));
         $('<a>').attr('href', `/user/${username}`).attr('class', 'nav-link').text(username).appendTo(userNav);
@@ -106,6 +109,7 @@ function UpdateNavBar(logged_in, username) {
         let signupNav = $('<li>').attr('class', 'nav-item').appendTo($('#navbar-left'));
         $('<a>').attr('href', `/signup`).attr('class', 'nav-link').text('Sign up').appendTo(signupNav);
     }
+    RefreshView();
 
 }
 
@@ -126,16 +130,20 @@ saveForm.on('submit', async function (evt) {
             forecastFinancials['avg-growth'] += forecastFinancials['revenue'][i] / forecastFinancials['revenue'][i - 1] - 1;
         }
     }
+    if (multipleType == 0) {
+        forecastFinancials['ps'] = forecastFinancials['pe'];
+    } else {
+        forecastFinancials['ps'] = -1;
+    }
     forecastFinancials['avg-growth'] = forecastFinancials['avg-growth'] / forecastPeriod;
     forecastFinancials['avg-cogs'] = GetAvg(forecastFinancials['cogs'], forecastFinancials['revenue']);
     forecastFinancials['avg-opex'] = GetAvg(forecastFinancials['opex'], forecastFinancials['revenue']);
     forecastFinancials['avg-depreciation'] = GetAvg(forecastFinancials['depreciation'], forecastFinancials['revenue']);
     forecastFinancials['avg-other'] = GetAvg(forecastFinancials['other'], forecastFinancials['revenue']);
     forecastFinancials['avg-tax'] = GetAvg(forecastFinancials['tax'], forecastFinancials['revenue']);
-    forecastFinancials['avg-dividend'] = GetAvg(forecastFinancials['dividend'], forecastFinancials['revenue']);
-    console.log(forecastFinancials);
+    forecastFinancials['avg-dividend'] = GetAvg(forecastFinancials['dividend'], []);
+    forecastFinancials['shares_out'] = finInfo['shares_out'];
     const res = axios.post('/api/forecasts/save', forecastFinancials);
-    console.log(res);
     Flash('Successfully saved', 'success', 'base-flash-msgs');
     $('#save-modal').modal('hide');
 });
@@ -169,7 +177,6 @@ function UpdateFinancials(evt) {
         }
     } else {
         let revenuePerc = input / 100;
-        console.log(`${input} / 100 = ${revenuePerc}, ${forecastFinancials['revenue'][period]}`);
         amt = revenuePerc * forecastFinancials['revenue'][period];
     }
     forecastFinancials[category][period] = amt;
@@ -181,7 +188,6 @@ function UpdateFinancials(evt) {
 function RefreshView() {
     const histFields = $('.hist');
     const forecastFields = $('.table-input, .calc');
-    const valFields = $('.val');
     CalculateFinancials();
     if (viewType == 0) {
 
@@ -256,9 +262,6 @@ function RefreshView() {
             const category = id.slice(0, id.length - 1);
             const revenue = forecastFinancials['revenue'][period];
             let amt = forecastFinancials[category][period] / revenue;
-            if (category == 'cogs') {
-                console.log(`${category}: ${forecastFinancials[category][period]} / ${revenue} = ${amt}`);
-            }
 
             field.innerText = `${FormatNumber(amt, 0.01, 2, 1)}`;
             field.value = `${FormatNumber(amt, 0.01, 2, 1)}`;
@@ -276,7 +279,7 @@ function RefreshView() {
 function CalculateFinancials() {
     // this function calculates all the subtotal fields (e.g. EBITDA)
     // and store them in dictionaries
-
+    
     for (let i = 0; i < histPeriod; i++) {
         historicFinancials['gross-income'][i] = historicFinancials['revenue'][i] - historicFinancials['cogs'][i];
         historicFinancials['ebitda'][i] = historicFinancials['gross-income'][i] - historicFinancials['opex'][i];
@@ -295,10 +298,14 @@ function CalculateFinancials() {
         forecastFinancials['eps'][i] = forecastFinancials['net-income'][i] / finInfo['shares_out'];
         forecastFinancials['divtot'] += forecastFinancials['dividend'][i];
     }
-    forecastFinancials['price'] = forecastFinancials['pe'] * forecastFinancials['eps'][forecastFinancials['eps'].length - 1];
+    if (multipleType == 0) {
+        forecastFinancials['price'] = forecastFinancials['pe'] * forecastFinancials['eps'][forecastFinancials['eps'].length - 1];
+    } else {
+        forecastFinancials['price'] = forecastFinancials['pe'] * (forecastFinancials['revenue'][forecastFinancials['revenue'].length - 1] / (finInfo['shares_out']));
+    }
     forecastFinancials['divtot'] = forecastFinancials['divtot'] / (finInfo['shares_out']);
     forecastFinancials['target'] = forecastFinancials['divtot'] + forecastFinancials['price'];
-    forecastFinancials['return'] = (forecastFinancials['target'] / priceInfo['hist_30d_prices'][priceInfo['hist_30d_prices'].length - 1]) ** (1 / forecastPeriod) - 1;
+    forecastFinancials['return'] = (forecastFinancials['target'] / priceInfo['cur_price']) ** (1 / forecastPeriod) - 1;
 }
 
 async function Init() {
@@ -322,13 +329,12 @@ async function Init() {
         historicFinancials['eps'].push(0);
     }
     const query = $('#query-data');
-    console.log(`hey, ${query.attr('data-user')}`);
     if (query.attr('data-user') != 'None') {
         $('#save-forecast').attr('data-bs-target', '#save-modal');
     }
     const rates = {
-        'revenue': Number(query.attr('data-growth')) / 100,
-        'cogs': (1 - Number(query.attr('data-margin') / 100)),
+        'revenue': finInfo['avg_growth'],
+        'cogs': GetAvg(historicFinancials['cogs'], historicFinancials['revenue']),
         'opex': GetAvg(historicFinancials['opex'], historicFinancials['revenue']),
         'depreciation': GetAvg(historicFinancials['depreciation'], historicFinancials['revenue']),
         'other': GetAvg(historicFinancials['other'], historicFinancials['revenue']),
@@ -352,7 +358,14 @@ async function Init() {
         }
         forecastFinancials['period'][i] = historicFinancials['period'][histPeriod - 1] + i + 1;
     }
-    forecastFinancials['pe'] = Number(query.attr('data-pe'));
+
+    if (typeof (finInfo['pe_ratio']) == 'number') {
+        forecastFinancials['pe'] = finInfo['pe_ratio'];
+        multipleType = 0;
+    } else {
+        forecastFinancials['pe'] = finInfo['ps_ratio'];
+        multipleType = 1;
+    }
     RefreshView();
 }
 
@@ -368,7 +381,7 @@ function GetAvg(nums, rev) {
         return sum / nums.length;
     } else {
         for (let i = 1; i < nums.length; i++) {
-            sum += nums[i] / nums[i - 1] - 1;
+            sum += nums[i] / nums[i - 1];
         }
         return sum / (nums.length - 1);
     }

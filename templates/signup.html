@@ -1,5 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="container">
+  
+  {% if login %}
+  <h1 class="my-5">Login</h1>
+    {% else %}
+    <h1 class="my-5">Hello Analyst!</h1>
+    <p class="my-3">Sign up to save and share your stock analysis.</p>
+    {% endif %}
+  
 <form id="signup" method="POST">
     {{ form.hidden_tag() }} <!--add type=hidden form fields -->
   
@@ -7,8 +16,8 @@
            if field.widget.input_type != 'hidden' %}
   
       <p>
-        {{ field.label }}
-        {{ field }}
+        {{ field.label (class="form-label")}}
+        {{ field (class="form-control")}}
   
         {% for error in field.errors %}
           {{ error }}
@@ -18,13 +27,14 @@
     {% endfor %}
       
     {% if login %}
-    <button type="submit">Login</button>
-    <p>Don't have an account? <a href="/signup">Sigh up</a></p>
+    <button type="submit" class="btn btn-primary my-3">Login</button>
+    <p>Don't have an account? <a href="/signup">Sign up</a></p>
     {% else %}
-    <button type="submit">Sign Up</button>
+    <button type="submit" class="btn btn-primary my-3">Sign Up</button>
     <p>Already have an account? <a href="/login">Log in</a></p>
     {% endif %}
     
   </form>
+</div>
 
 {% endblock %}

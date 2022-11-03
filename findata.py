@@ -1,7 +1,9 @@
 from ast import Raise
-from models import *
 from helper import *
 import yfinance as yf
+from currency_converter import CurrencyConverter
+
+c = CurrencyConverter()
 
 
 def get_stock_data(ticker):
@@ -18,9 +20,9 @@ def get_stock_data(ticker):
     if (stock_info['regularMarketPrice']):
         if ('Selling General Administrative' in fin_data.index):
             for i in range(0, len(fin_data.loc['Selling General Administrative'])):
-                fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) - \
-                    (cf_data.loc['Depreciation'][i] or 0) + \
-                    (fin_data.loc['Research Development'][i] or 0), 0)
+                fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) -
+                                                                        (cf_data.loc['Depreciation'][i] or 0) +
+                                                                        (fin_data.loc['Research Development'][i] or 0), 0)
         stock_data = {
             # basic info
             'ticker': ticker.upper(),
@@ -59,44 +61,62 @@ def get_stock_data(ticker):
             # estimates
             'rev_estimate': 0,
             'price_estimate_low': stock_info.get('targetLowPrice', None),
-            'price_estimate_high': stock_info.get('targetHighPrice', None),
-            
+            'price_estimate_high': stock_info.get('targetHighPrice', None)
+
         }
-        for i in range(len(fin_data.columns)):
-            if 'Net Income' in fin_data.index:
-                stock_data['net_income'] = fin_data.loc['Net Income'][::-1]
-            if 'Total Revenue' in fin_data.index:
-                stock_data['revenue'] = fin_data.loc['Total Revenue'][::-1]
-            if 'Cost Of Revenue' in fin_data.index:
-                stock_data['cogs'] = fin_data.loc['Cost Of Revenue'][::-1]
-            if 'Selling General Administrative' in fin_data.index:
-                stock_data['opex'] = fin_data.loc['Selling General Administrative'][::-1]
-            if 'Depreciation' in cf_data.index:
-                stock_data['depreciation'] = cf_data.loc['Depreciation'][::-1]
-            if 'Total Other Income Expense Net' in fin_data.index:
-                stock_data['other'] = fin_data.loc['Total Other Income Expense Net'][::-1]
-            if 'Income Tax Expense' in fin_data.index:
-                stock_data['tax'] = fin_data.loc['Income Tax Expense'][::-1]
-            if 'Dividends Paid' in cf_data.index:
-                stock_data['dividend'] = cf_data.loc['Dividends Paid'][::-1]
-            if not fin_data.empty:
-                stock_data['periods'] = fin_data.columns[::-1]
+        # Getting financial info
+        if 'Net Income' in fin_data.index:
+            stock_data['net_income'] = convert(
+                fin_data.loc['Net Income'][::-1], stock_info['financialCurrency'])
+        if 'Total Revenue' in fin_data.index:
+            stock_data['revenue'] = convert(
+                fin_data.loc['Total Revenue'][::-1], stock_info['financialCurrency'])
+        if 'Cost Of Revenue' in fin_data.index:
+            stock_data['cogs'] = convert(
+                fin_data.loc['Cost Of Revenue'][::-1], stock_info['financialCurrency'])
+        if 'Selling General Administrative' in fin_data.index:
+            stock_data['opex'] = convert(
+                fin_data.loc['Selling General Administrative'][::-1], stock_info['financialCurrency'])
+        if 'Depreciation' in cf_data.index:
+            stock_data['depreciation'] = convert(
+                cf_data.loc['Depreciation'][::-1], stock_info['financialCurrency'])
+        if 'Total Other Income Expense Net' in fin_data.index:
+            stock_data['other'] = convert(
+                fin_data.loc['Total Other Income Expense Net'][::-1], stock_info['financialCurrency'])
+        if 'Income Tax Expense' in fin_data.index:
+            stock_data['tax'] = convert(
+                fin_data.loc['Income Tax Expense'][::-1], stock_info['financialCurrency'])
+        if 'Dividends Paid' in cf_data.index:
+            stock_data['dividend'] = convert(
+                cf_data.loc['Dividends Paid'][::-1], stock_info['financialCurrency'])
+        if not fin_data.empty:
+            stock_data['periods'] = fin_data.columns[::-1]
         if stock_analysis is not None:
-            stock_data['rev_estimate'] = stock_analysis['Revenue Estimate Avg']['+1Y'] / fin_data.loc['Total Revenue'][0] - 1
-        
+            stock_data['rev_estimate'] = c.convert(stock_analysis['Revenue Estimate Avg']['+1Y'], stock_info['financialCurrency'], 'USD') / c.convert(
+                fin_data.loc['Total Revenue'][0], stock_info['financialCurrency'], 'USD') - 1
+        # Getting vertical analysis
+        stock_data['avg_growth'] = get_avg(stock_data['revenue'], [])
+        stock_data['avg_cogs'] = get_avg(stock_data['cogs'], stock_data['revenue'])
+        stock_data['avg_opex'] = get_avg(stock_data['opex'], stock_data['revenue'])
+        stock_data['avg_depreciation'] = get_avg(stock_data['depreciation'], stock_data['revenue'])
+        stock_data['avg_other'] = get_avg(stock_data['other'], stock_data['revenue'])
+        stock_data['avg_tax'] = get_avg(stock_data['tax'], stock_data['revenue'])
+        stock_data['avg_dividend'] = get_avg(stock_data['dividend'], [])
         # netincome = stock_data['revenue'][0] - \
         #     stock_data['cogs'][0] - stock_data['depreciation'][0] - \
         #     stock_data['opex'][0] + \
         #     stock_data['other'][0] - stock_data['tax'][0]
-        # assert stock_data['net_income'][0] == netincome 
+        # assert stock_data['net_income'][0] == netincome
         # Due to limitation of API, the final stock data may not be accurate for certain stocks
         return stock_data
     else:
         return None
 
 
+
 def get_price(symbol):
-    """ This function get the current price of a stock .
+    """ This function get the current price of a stock.
+
         If the symbol is invalid, return None
     """
     ticker = yf.Ticker(symbol)
@@ -114,8 +134,41 @@ def get_price(symbol):
         dates = [str(row[0])[0:10] for row in hist_data]
         prices = [row[1] for row in hist_data]
         volume = [row[2] for row in hist_data]
+        cur_price = prices[-1]
+        # returning information in a dict format
         return {
             'hist_30d_dates': dates,
             'hist_30d_prices': prices,
-            'hist_30d_volumes': volume
+            'hist_30d_volumes': volume,
+            'cur_price': cur_price
         }
+
+def convert(fin, cur):
+    """Takes a dataframe, convert its rows to USD"""
+    new_df = fin.fillna(0)
+    for i in range(len(new_df)):
+        new_df[i] = c.convert(new_df[i], cur, 'USD')
+    return new_df
+
+
+def get_avg(item, rev):
+    """Given a line item, calculate its average percentage of rev
+        if rev is not given, calculate the growth rate instead
+    """
+    sum = 0.0
+    if len(rev) > 0:
+        for i in range(len(item)):
+            if rev[i] == 0:
+                sum += 1
+            else:
+                sum += item[i] / rev[i]
+        return sum / len(item)
+    else:
+        for i in range(1, len(item)):
+            if item[i-1] == 0:
+                sum += -1
+            elif item[i] == 0:
+                sum += 1
+            else:
+                sum += item[i] / item[i - 1] - 1
+        return sum / (len(item) - 1)

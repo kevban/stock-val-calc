@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="container-lg">
 <div class="container text-center my-5">
     <h1>{{user.username}}</h1>
 </div>
@@ -8,7 +9,7 @@
     <thead>
         <tr>
             <th scope="col">Company</th>
-            <th scope="col">Date</th>
+            <th scope="col">Last Updated</th>
             <th scope="col">Price Target</th>
             <th scope="col">Position</th>
             <th scope="col">Number of Ratings</th>
@@ -30,6 +31,6 @@
 <a href="/" class="btn btn-success">Make a new forecast</a>
 <a href="/logout" class="btn btn-danger">Log out</a>
 {% endif %}
-
+</div>
     
 {% endblock %}

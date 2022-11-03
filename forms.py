@@ -1,14 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import *
 
-class StockValQuestionaire(FlaskForm):
-    growth = IntegerField("What is your expected revenue growth rate? (%)")
-    margin = IntegerField("What is your expected gross margin on sales? (%)")
-    pe = FloatField("What is your expected P/E ratio in the future?")
-
 class LoginForm(FlaskForm):
-    username = StringField("Username")
-    password = PasswordField("Password")
+    username = StringField("Username", validators=[validators.Length(min=4, max=25, message="Username must be between 4 and  25 characters")])
+    password = PasswordField("Password",validators=[validators.Length(min=6, max=25, message="Password must be between 6 and  25 characters")])
 
 class SaveForecastForm(FlaskForm):
     name = StringField("Forecast Title")

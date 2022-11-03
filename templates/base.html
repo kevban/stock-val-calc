@@ -5,49 +5,44 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="/static/bootstrap.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <title>Document</title>
 
 </head>
 
 <body>
-    <nav class="navbar navbar-expand bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <ul class="nav navbar-nav navbar" id="navbar-left">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                {% if g.user %}
-                <li class="nav-item"><a class="nav-link" href="/user/{{g.user.username}}">{{g.user.username}}</a></li>
-                {% else %}
-                <li class="nav-item"><a class="nav-link" href="/signup">Sign Up</a></li>
-                <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
-                {% endif %}
-            </ul>
-
+            <a class="navbar-brand" href="/">Stock Valuator</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-
-            <ul class="nav navbar-nav navbar">
-
-                <li class="nav-item">
-                    <form class="" action="/users">
-                        <input name="q" class="" placeholder="Search Ticker" id="search">
-                        <button class="btn btn-success" type="submit">
-                            <span class="fa fa-search"></span>
-                        </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto" id="navbar-left">
+                    {% if g.user %}
+                    <li class="nav-item"><a class="nav-link" href="/user/{{g.user.username}}">{{g.user.username}}</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="/signup">Sign Up</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
+                    <form class="d-flex" action="/search" method="POST">
+                        <input class="form-control me-2" type="search" name="search-term" placeholder="Search"
+                            aria-label="Search">
+                        <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
-                </li>
-            </ul>
-
+                    {% endif %}
+                </ul>
+                
+            </div>
         </div>
     </nav>
+
 
     <div class="container" id="base-flash-msgs">
         {% for category, message in get_flashed_messages(with_categories=True) %}
