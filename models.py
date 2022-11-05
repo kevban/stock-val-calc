@@ -5,6 +5,7 @@ from findata import get_price, get_stock_data
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from helper import format_num
+import numbers
 import statistics
 
 
@@ -272,30 +273,33 @@ class Stock(db.Model):
         # adding forecast information to a single list
         for forecast in self.user_forecasts:
             count += 1
-            summary['growth'].append(forecast.growth)
-            summary['target'].append(forecast.target)
-            summary['cogs'].append(forecast.cogs)
-            summary['opex'].append(forecast.opex)
-            summary['depreciation'].append(forecast.depreciation)
-            summary['other'].append(forecast.other)
-            summary['tax'].append(forecast.tax)
-            summary['dividend'].append(forecast.dividend)
+            summary['growth'].append(forecast.growth or 0)
+            summary['target'].append(forecast.target or 0)
+            summary['cogs'].append(forecast.cogs or 0)
+            summary['opex'].append(forecast.opex or 0)
+            summary['depreciation'].append(forecast.depreciation or 0)
+            summary['other'].append(forecast.other or 0)
+            summary['tax'].append(forecast.tax or 0)
+            summary['dividend'].append(forecast.dividend or 0)
             # if the forecast is using price to sales, add it to ps
             if forecast.ps != -1:
-                summary['ps'].append(forecast.pe)
+                summary['ps'].append(forecast.pe or 0)
             # if the forecast is using price to earnings, add it to pe
             else:
-                summary['pe'].append(forecast.ps)
+                summary['pe'].append(forecast.ps or 0)
 
         # if there is at least one forecast made for this stock
         if count > 0:
             for k in summary.keys():
                 # calculate user median
-                forecast_data[k] = statistics.median(summary[k])
-                if k != 'target':
-                    # change item to % except for target price
-                    forecast_data[k] = forecast_data[k] * 100
-                forecast_data[k] = format_num(forecast_data[k]) # format the numbers nicely for display
+                if summary[k] and len(summary[k]) > 0:
+                    forecast_data[k] = statistics.median(summary[k])
+                    if k != 'target':
+                        # change item to % except for target price
+                        forecast_data[k] = forecast_data[k] * 100
+                    forecast_data[k] = format_num(forecast_data[k]) # format the numbers nicely for display
+                else:
+                    continue
 
             forecast_data['count'] = count
         return forecast_data
