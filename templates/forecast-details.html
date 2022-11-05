@@ -28,7 +28,7 @@
         </thead>
         <tbody>
             <tr>
-                <th scope="row">Revenue <i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Revenue <i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Revenue"
                         data-bs-content="The income from company's core business. Forecasted using year-over-year growth rate."
                         data-bs-html="true"></i></th>
@@ -38,7 +38,7 @@
                 <td>{{forecast['revenue'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Cost of Revenue<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Cost of Revenue<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Cost of Revenue"
                         data-bs-content="The cost attributable to sales. Forecasted as a percentage of total revenue."
                         data-bs-html="true"></i></th>
@@ -48,7 +48,7 @@
                 <td>{{forecast['cogs'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Gross Income<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Gross Income<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Gross Income"
                         data-bs-content="The income from company's core business, net of cost of sales."
                         data-bs-html="true"></i></th>
@@ -58,7 +58,7 @@
                 <td>{{forecast['gross_income'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Operating Expenses<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Operating Expenses<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Operating Expenses"
                         data-bs-content="Cost that are not directly attributable to sales, but support business operations (e.g. research & development, selling & administrative costs). Forecasted as % of revenue."
                         data-bs-html="true"></i></th>
@@ -68,7 +68,7 @@
                 <td>{{forecast['opex'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">EBITDA<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">EBITDA<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="EBITDA"
                         data-bs-content="EBITDA (Earnings before interest, depreciation, amortization) measures the cash generated from the company's core operations"
                         forecast-bs-html="true"></i></th>
@@ -78,7 +78,7 @@
                 <td>{{forecast['ebitda'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Depreciation<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Depreciation<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Depreciation"
                         data-bs-content="The estimated cost of capital assets (e.g. machinery) during the year. Forecasted using % or sales or capital assets."
                         data-bs-html="true"></i></th>
@@ -88,7 +88,7 @@
                 <td>{{forecast['depreciation'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Operating Income<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Operating Income<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Operating Income"
                         data-bs-content="The income from company's core business, including depreciation."
                         data-bs-html="true"></i></th>
@@ -99,7 +99,7 @@
             </tr>
             <tr>
                 <th scope="row">Other Revenue or Expenses<i class="fa-solid mx-2 fa-circle-question"
-                        data-bs-toggle="popover" data-bs-title="Other Revenue or Expenses"
+                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Other Revenue or Expenses"
                         data-bs-content="The income or expense that are not related to the company's core business (e.g. interest, lawsuit, etc). Forecasted using % of revenue, or excluded entirely if insignificant."
                         data-bs-html="true"></i></th>
                 <td>{{forecast['other'][0]}}</td>
@@ -109,7 +109,7 @@
             </tr>
             <tr>
                 <th scope="row">Net Income Before Tax<i class="fa-solid mx-2 fa-circle-question"
-                        data-bs-toggle="popover" data-bs-title="Net Income Before Tax"
+                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Net Income Before Tax"
                         data-bs-content="The company's earnings before deducting tax." data-bs-html="true"></i></th>
                 </th>
                 <td>{{forecast['ebt'][0]}}</td>
@@ -118,7 +118,7 @@
                 <td>{{forecast['ebt'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Income Tax Expense<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Income Tax Expense<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Income Tax Expense"
                         data-bs-content="The taxes that the company must pay (or receive, due to loss carryforward/tax credits) in their operating jurisdiction. Forecasted using % of net income before tax."
                         data-bs-html="true"></i></th>
@@ -129,7 +129,7 @@
                 <td>{{forecast['tax'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Net Income<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Net Income<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Net Income" data-bs-content="The company's earnings after deducting tax."
                         data-bs-html="true"></i></th>
                 </th>
@@ -139,7 +139,7 @@
                 <td>{{forecast['net_income'][3]}}</td>
             </tr>
             <tr>
-                <th scope="row">Dividends<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                <th scope="row">Dividends<i class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                         data-bs-title="Dividends"
                         data-bs-content="The amount distributed to shareholders. Forecasted using an estimated growth rate over prior dividends."
                         data-bs-html="true"></i></th>
@@ -158,7 +158,7 @@
                 <tbody>
                     <tr>
                         <th scope="row">Valuation Method <i class="fa-solid mx-2 fa-circle-question"
-                                data-bs-toggle="popover" data-bs-title="Exit Multiple"
+                                data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Exit Multiple"
                                 data-bs-content="An exit multiple (e.g. P/E ratio, P/S ratio) can be applied to the stock's EPS at the end of the forecast period to derive the stock's share price. P/E ratio can be used for most income generating company. If the company does not have earnings, a P/S ratio should be used instead."
                                 data-bs-html="true"></i></th>
                         </th>
@@ -172,7 +172,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Exit multiple <i class="fa-solid mx-2 fa-circle-question"
-                                data-bs-toggle="popover" data-bs-title="Exit Multiple"
+                                data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Exit Multiple"
                                 data-bs-content="The price that investors are willing to pay for the stock. This multiple is higher when investors are more optimistic about the stock (e.g. higher anticipated growth rate, margins, or they just like the stock)."
                                 data-bs-html="true"></i></th>
                         </th>
@@ -180,7 +180,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Forecasted EPS in {{forecast['period'][3]}}<i
-                                class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                                class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                                 data-bs-title="Forecasted EPS"
                                 data-bs-content="This is the EPS (earnings per share) based on your forecasted net income at the end of the period"
                                 data-bs-html="true"></i></th>
@@ -188,7 +188,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Implied Share price at {{forecast['period'][3]}}<i
-                                class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover"
+                                class="fa-solid mx-2 fa-circle-question" data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
                                 data-bs-title="implied Share price"
                                 data-bs-content="This is the share price based on the forecast and exit multiple. If this number is negative, it means that your forecasted net income is negative, and you should use P/S as exit multiple instead."
                                 data-bs-html="true"></i></th>
@@ -196,21 +196,21 @@
                     </tr>
                     <tr>
                         <th scope="row">Total dividends per share<i class="fa-solid mx-2 fa-circle-question"
-                                data-bs-toggle="popover" data-bs-title="Dividend per share"
+                                data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Dividend per share"
                                 data-bs-content="This is the total dividends you receive per share over the forecast period."
                                 data-bs-html="true"></i></th>
                         <td>{{forecast['dividend_per_share']}}</td>
                     </tr>
                     <tr>
                         <th scope="row">Target Share price<i class="fa-solid mx-2 fa-circle-question"
-                                data-bs-toggle="popover" data-bs-title="Target Share price"
+                                data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Target Share price"
                                 data-bs-content="This is the breakeven price based on your forecasted share price and dividend income."
                                 data-bs-html="true"></i></th>
                         <td>{{forecast['target']}}</td>
                     </tr>
                     <tr>
                         <th scope="row">Annualized return<i class="fa-solid mx-2 fa-circle-question"
-                                data-bs-toggle="popover" data-bs-title="Annualized Return"
+                                data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0" data-bs-title="Annualized Return"
                                 data-bs-content="This is the annual return you will receive if you buy this stock at current price, and sell at the end of forecastd period, based on your forecast."
                                 data-bs-html="true"></i></th>
                         <td>{{forecast['return']}}</td>
@@ -221,4 +221,7 @@
         <div class="col-6"></div>
     </div>
 </div>
+{% endblock %}
+{% block script %}
+<script src="/static/forecast-display-only.js"></script>
 {% endblock %}

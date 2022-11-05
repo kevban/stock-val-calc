@@ -5,7 +5,9 @@
         <h1>{{user.username}}'s {{ticker}} coverage</h1>
     </div>
     <h2>{{user.username}}'s Forecasts</h2>
+    {% if g.user.username == user.username %}
     <form action="/user/{{user.username}}/forecast/{{ticker}}/update-weighting" method="post">
+        {% endif %}
         <table class="table" id="forecast-table">
             <thead>
                 <tr>
@@ -21,16 +23,19 @@
                     <th scope="row"><a href="/forecast/{{forecast.id}}">{{forecast.name}}</a></th>
                     <th scope="row">{{forecast.date}}</th>
                     <th scope="row">{{forecast.target}}</th>
+                    {% if g.user.username == user.username %}
                     <th scope="row"><input type="text" class="form-control table-input" value="{{forecast.weight}}"
                             name="{{forecast.id}}"></th>
+                    {% else %}
+                    <th scope="row">{{forecast.weight}}</th>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% if g.user.username == user.username %}
         <button type="submit" class="btn btn-success">Update Weighting</button>
-        {% endif %}
     </form>
+    {% endif %}
 </div>
-
 {% endblock %}

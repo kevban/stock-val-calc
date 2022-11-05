@@ -5,6 +5,7 @@ from findata import get_price, get_stock_data
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from helper import format_num
+import statistics
 
 
 """Models for stockval."""
@@ -14,6 +15,8 @@ db = SQLAlchemy()
 
 
 def connect_db(app):
+    """Initializing database"""
+
     with app.app_context():
 
         db.app = app
@@ -23,6 +26,8 @@ def connect_db(app):
 
 
 class Stock(db.Model):
+    """The table for stock information"""
+
     __tablename__ = 'stocks'
 
     ticker = db.Column(db.String, primary_key=True)
@@ -63,7 +68,10 @@ class Stock(db.Model):
 
         if the ticker does not exist, return None
         """
+
+        # Get stock data from api
         stock_data = get_stock_data(ticker)
+        # If stock exist, add it to the database
         if stock_data != None:
             stock = Stock(
                 ticker=stock_data['ticker'],
@@ -97,6 +105,7 @@ class Stock(db.Model):
                 avg_dividend=stock_data['avg_dividend'],
                 cur_price=stock_data['current_price']
             )
+            # adding financial data in a separate table
             for i in range(len(stock_data['periods'])):
                 financial = Financial(
                     company_ticker=ticker, period=stock_data['periods'][i].year,
@@ -181,12 +190,18 @@ class Stock(db.Model):
         else:
             return cls.add_stock(ticker)
 
-    def update_price(self):
+    def update_price(self, price):
         """Update the stock price."""
+
+        self.cur_price = price
+        db.session.add(self)
+        db.session.commit()
 
     def update_stock(self):
         """Update the stock with new stock information retrieved form API
         """
+
+        # Below is the same as add_stock
         stock_data = get_stock_data(self.ticker)
         self.ticker=stock_data['ticker'],
         self.shares_out=stock_data['shares_out'],
@@ -233,50 +248,61 @@ class Stock(db.Model):
         db.session.commit()
 
     def get_forecast_data(self):
-        """Return a summary of user forecasts"""
+        """Return a summary of user forecasts as median"""
 
         count = 0
+        
+        # storing each forecast in a list to get median
         summary = {
-            'growth': 0,
-            'target': 0,
-            'cogs': 0,
-            'opex': 0,
-            'depreciation': 0,
-            'other': 0,
-            'tax': 0,
-            'dividend': 0,
-            'pe': 0,
-            'ps': 0,
-            'count': 0
+            'growth': [],
+            'target': [],
+            'cogs': [],
+            'opex': [],
+            'depreciation': [],
+            'other': [],
+            'tax': [],
+            'dividend': [],
+            'pe': [],
+            'ps': []
         }
 
+        # shows the average user forecast amounts in a dict format
+        forecast_data = {}
+
+        # adding forecast information to a single list
         for forecast in self.user_forecasts:
             count += 1
-            summary['growth'] += forecast.growth
-            summary['target'] += forecast.target
-            summary['cogs'] += forecast.cogs
-            summary['opex'] += forecast.opex
-            summary['depreciation'] += forecast.depreciation
-            summary['other'] += forecast.other
-            summary['tax'] += forecast.tax
-            summary['dividend'] += forecast.dividend
+            summary['growth'].append(forecast.growth)
+            summary['target'].append(forecast.target)
+            summary['cogs'].append(forecast.cogs)
+            summary['opex'].append(forecast.opex)
+            summary['depreciation'].append(forecast.depreciation)
+            summary['other'].append(forecast.other)
+            summary['tax'].append(forecast.tax)
+            summary['dividend'].append(forecast.dividend)
+            # if the forecast is using price to sales, add it to ps
             if forecast.ps != -1:
-                summary['ps'] += forecast.pe
+                summary['ps'].append(forecast.pe)
+            # if the forecast is using price to earnings, add it to pe
             else:
-                summary['pe'] += forecast.ps
+                summary['pe'].append(forecast.ps)
 
+        # if there is at least one forecast made for this stock
         if count > 0:
             for k in summary.keys():
-                summary[k] /= count
+                # calculate user median
+                forecast_data[k] = statistics.median(summary[k])
                 if k != 'target':
-                    summary[k] = summary[k] * 100
-                summary[k] = format_num(summary[k])
+                    # change item to % except for target price
+                    forecast_data[k] = forecast_data[k] * 100
+                forecast_data[k] = format_num(forecast_data[k]) # format the numbers nicely for display
 
-            summary['count'] = count
-        return summary
+            forecast_data['count'] = count
+        return forecast_data
 
 
 class Financial(db.Model):
+    """This table stores all the historic financial statement for stocks in the database"""
     __tablename__ = 'financials'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -349,6 +375,8 @@ class PriceHistory(db.Model):
 
 
 class User(db.Model):
+    """This table stores user information"""
+
     __tablename__ = 'users'
     username = db.Column(db.String, primary_key=True)
     password = db.Column(db.String, nullable=False)
@@ -407,29 +435,37 @@ class User(db.Model):
         covered_stocks = []
 
         for k in user_forecasts.keys():
-            price = get_price(k)
-            recommendation = 'Buy'
-            stock = {}
-            stock['target'] = 0
-            stock['ticker'] = k
-            total_weight = 0
-            count = 0
-            for v in user_forecasts[k]:
-                stock['date'] = v['date']
-                stock['target'] = stock['target'] + v['target'] * v['weight']
-                total_weight += v['weight']
-                count += 1
-
-            stock['target'] /= total_weight
-            if stock['target'] < price['hist_30d_prices'][len(price['hist_30d_prices']) - 1]:
-                recommendation = 'Sell'
-            stock['recommendation'] = recommendation
-            stock['ratings'] = count
-            covered_stocks.append(stock)
+            # getting the stock from database
+            stock_db = Stock.query.get(k)
+            if stock_db:
+                curprice = stock_db.cur_price
+                recommendation = 'Buy'
+                stock = {}
+                stock['target'] = 0
+                stock['ticker'] = k
+                total_weight = 0
+                count = 0
+                for v in user_forecasts[k]: # go through each forecast for the stock
+                    # Make the date = latest forecast date
+                    stock['date'] = v['date']
+                    # adding the stock's target price based on weighting
+                    stock['target'] = stock['target'] + v['target'] * v['weight']
+                    total_weight += v['weight']
+                    count += 1
+                stock['target'] /= total_weight # adjust the user's target price based on forecast ratings
+                if stock['target'] < curprice:
+                    recommendation = 'Sell' # if target price is less than current price, change rating to sell
+                stock['recommendation'] = recommendation
+                stock['ratings'] = count # keep track how many forecasts the user have done
+                covered_stocks.append(stock)
+            else: # if stock does not exist, return None
+                return None
         return covered_stocks
 
 
 class Forecast(db.Model):
+    """This table stores user forecasts"""
+
     __tablename__ = 'forecasts'
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     username = db.Column(db.String, db.ForeignKey(
@@ -460,6 +496,8 @@ class Forecast(db.Model):
 
     @classmethod
     def save_forecast(cls, forecasts, username):
+        """Saving user forecast"""
+
         new_forecast = Forecast(
             username=username,
             ticker=forecasts['ticker'],
@@ -473,7 +511,7 @@ class Forecast(db.Model):
             other=forecasts['avg-other'],
             tax=forecasts['avg-tax'],
             dividend=forecasts['avg-dividend'],
-            pe=forecasts['pe'],
+            pe=forecasts['pe-actual'],
             ps=forecasts['ps'],
             shares_out=forecasts['shares_out']
         )
@@ -496,6 +534,7 @@ class Forecast(db.Model):
 
     def serialize(self):
         """Return a dictionary representation of the forecast"""
+
         financials = {
             'id': self.id,
             'ticker': self.ticker,
@@ -533,6 +572,8 @@ class Forecast(db.Model):
 
 
 class ForecastFinancials(db.Model):
+    """This table stores forecasted financial statements from user forecasts"""
+
     __tablename__ = 'forecast_financials'
 
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -551,6 +592,8 @@ class ForecastFinancials(db.Model):
     forecast = db.relationship('Forecast', backref='forecast_financials')
 
     def serialize(self):
+        """Return a dictionary representation of the this financial statement"""
+
         return {
             'period': self.period,
             'revenue': self.revenue,

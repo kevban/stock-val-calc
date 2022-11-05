@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/static/bootstrap.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <title>Document</title>
+    <title>Stock Valuator</title>
 
 </head>
 
@@ -24,19 +24,22 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-auto" id="navbar-left">
+                <ul class="navbar-nav me-auto" id="navbar-left">
                     {% if g.user %}
                     <li class="nav-item"><a class="nav-link" href="/user/{{g.user.username}}">{{g.user.username}}</a>
                     </li>
                     {% else %}
                     <li class="nav-item"><a class="nav-link" href="/signup">Sign Up</a></li>
                     <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
+                    {% endif %}
+                    
+                </ul>
+                <ul class="navbar-nav ms-auto" id="navbar-right">
                     <form class="d-flex" action="/search" method="POST">
                         <input class="form-control me-2" type="search" name="search-term" placeholder="Search"
                             aria-label="Search">
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
-                    {% endif %}
                 </ul>
                 
             </div>
@@ -44,9 +47,9 @@
     </nav>
 
 
-    <div class="container" id="base-flash-msgs">
+    <div class="container flash-container-main flash-containers" id="base-flash-msgs">
         {% for category, message in get_flashed_messages(with_categories=True) %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
+        <div class="alert alert-{{ category }} d-flex">{{ message }}<a href="#" class="ms-auto"><i class="fa-solid fa-xmark"></i></a></div>
         {% endfor %}
     </div>
     {% block content %}
@@ -61,6 +64,7 @@
         integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
         crossorigin="anonymous"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/static/app.js"></script>
     {% block script %}
     {% endblock %}
 </body>

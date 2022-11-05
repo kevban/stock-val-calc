@@ -12,17 +12,24 @@ def get_stock_data(ticker):
 
         Return None if ticker is invalid.
     """
+
     stock = yf.Ticker(ticker)
     fin_data = stock.financials
     cf_data = stock.get_cashflow()
     stock_info = stock.get_info()
     stock_analysis = stock.get_analysis()
+    # Checking if stock exist by seeing if it is actively quoted
     if (stock_info['regularMarketPrice']):
+        # Removing depreciation from SG&A, combining SG&A with R&D to simplify this line item.
         if ('Selling General Administrative' in fin_data.index):
             for i in range(0, len(fin_data.loc['Selling General Administrative'])):
-                fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) -
-                                                                        (cf_data.loc['Depreciation'][i] or 0) +
+                if 'Depreciation' in cf_data.index:
+                    fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) -
+                                                                        (cf_data.loc['Depreciation'][i] or 0), 0)
+                if 'Research Development' in fin_data.index:                                                       
+                    fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) +
                                                                         (fin_data.loc['Research Development'][i] or 0), 0)
+        # Getting stock data
         stock_data = {
             # basic info
             'ticker': ticker.upper(),
@@ -64,7 +71,7 @@ def get_stock_data(ticker):
             'price_estimate_high': stock_info.get('targetHighPrice', None)
 
         }
-        # Getting financial info
+        # Getting financial info, check if they exist before storing them.
         if 'Net Income' in fin_data.index:
             stock_data['net_income'] = convert(
                 fin_data.loc['Net Income'][::-1], stock_info['financialCurrency'])
@@ -92,8 +99,16 @@ def get_stock_data(ticker):
         if not fin_data.empty:
             stock_data['periods'] = fin_data.columns[::-1]
         if stock_analysis is not None:
-            stock_data['rev_estimate'] = c.convert(stock_analysis['Revenue Estimate Avg']['+1Y'], stock_info['financialCurrency'], 'USD') / c.convert(
-                fin_data.loc['Total Revenue'][0], stock_info['financialCurrency'], 'USD') - 1
+            if fin_data.loc['Total Revenue'][0] != 0:
+                # TWD not supported by currency converter, hard coding in the exchange rate for now
+                if stock_info['financialCurrency'] != 'TWD': 
+                    stock_data['rev_estimate'] = c.convert(stock_analysis['Revenue Estimate Avg']['+1Y'], stock_info['financialCurrency'], 'USD') / c.convert(
+                        fin_data.loc['Total Revenue'][0], stock_info['financialCurrency'], 'USD') - 1
+                else: 
+                    stock_data['rev_estimate'] = stock_analysis['Revenue Estimate Avg']['+1Y'] * 0.032 / fin_data.loc['Total Revenue'][0] * 0.032 - 1
+            else:
+                stock_data['rev_estimate'] = 1
+
         # Getting vertical analysis
         stock_data['avg_growth'] = get_avg(stock_data['revenue'], [])
         stock_data['avg_cogs'] = get_avg(stock_data['cogs'], stock_data['revenue'])
@@ -102,12 +117,16 @@ def get_stock_data(ticker):
         stock_data['avg_other'] = get_avg(stock_data['other'], stock_data['revenue'])
         stock_data['avg_tax'] = get_avg(stock_data['tax'], stock_data['revenue'])
         stock_data['avg_dividend'] = get_avg(stock_data['dividend'], [])
+        # Bellow checks if the calculation resulted the same amount as yahoo finance.
+        # However, due to limitation of API, the final stock data may not be accurate for certain stocks
+        # Therefore, they are commented out for the time being
+
         # netincome = stock_data['revenue'][0] - \
         #     stock_data['cogs'][0] - stock_data['depreciation'][0] - \
         #     stock_data['opex'][0] + \
         #     stock_data['other'][0] - stock_data['tax'][0]
         # assert stock_data['net_income'][0] == netincome
-        # Due to limitation of API, the final stock data may not be accurate for certain stocks
+        
         return stock_data
     else:
         return None
@@ -145,17 +164,25 @@ def get_price(symbol):
 
 def convert(fin, cur):
     """Takes a dataframe, convert its rows to USD"""
+
     new_df = fin.fillna(0)
-    for i in range(len(new_df)):
-        new_df[i] = c.convert(new_df[i], cur, 'USD')
-    return new_df
+    # Hard coding TWD currency, as currency converter does not support it
+    if cur == 'TWD':
+        for i in range(len(new_df)):
+            new_df[i] = new_df[i] * 0.031
+    else:
+        for i in range(len(new_df)):
+            new_df[i] = c.convert(new_df[i], cur, 'USD')
+    return new_df.astype(float) # casting the type to float, as sometimes type can change after conversion
 
 
 def get_avg(item, rev):
     """Given a line item, calculate its average percentage of rev
         if rev is not given, calculate the growth rate instead
     """
+
     sum = 0.0
+    # Calculating the % of revenue for each item, if rev is given
     if len(rev) > 0:
         for i in range(len(item)):
             if rev[i] == 0:
@@ -163,12 +190,10 @@ def get_avg(item, rev):
             else:
                 sum += item[i] / rev[i]
         return sum / len(item)
+    # calculating the year over year growth of item, if rev is empty.
     else:
-        for i in range(1, len(item)):
-            if item[i-1] == 0:
-                sum += -1
-            elif item[i] == 0:
-                sum += 1
-            else:
-                sum += item[i] / item[i - 1] - 1
-        return sum / (len(item) - 1)
+        for i in range(len(item)):
+            if (item[i] != 0):
+                sum = (item[-1] / item[i]) ** (1 / len(item)) - 1
+                return sum
+        return sum
