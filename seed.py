@@ -235,7 +235,7 @@ with app.app_context():
             elif stock.ps_ratio:   
                 ps = stock.ps_ratio * (1 + rand_num)
             else:
-                ps = 20 (1 + rand_num)
+                ps = 20 * (1 + rand_num)
             
             forecast = {
                 'ticker': stock.ticker,
