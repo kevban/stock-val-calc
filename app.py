@@ -223,7 +223,11 @@ def search():
     """Search a stock ticker given search term"""
 
     ticker = request.form["search-term"]
-    return redirect(f'/search/{ticker}')
+    if len(ticker) > 0:
+        return redirect(f'/search/{ticker}')
+    else:
+        flash("Please enter a search term", 'warning')
+        return redirect('/')
 
 
 @app.route('/search/<ticker>')
