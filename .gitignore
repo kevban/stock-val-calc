@@ -1,3 +1,4 @@
 venv/
 __pycache__
 .vercel
+nixpacks-v0.15.0-amd64.deb

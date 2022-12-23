@@ -17,9 +17,9 @@ def get_stock_data(ticker):
     fin_data = stock.financials
     cf_data = stock.get_cashflow()
     stock_info = stock.get_info()
-    stock_analysis = stock.get_analysis()
+    rev_forecast = stock.get_rev_forecast()
     # Checking if stock exist by seeing if it is actively quoted
-    if (stock_info['regularMarketPrice']):
+    if (stock_info and stock_info['regularMarketPrice']):
         # Removing depreciation from SG&A, combining SG&A with R&D to simplify this line item.
         if ('Selling General Administrative' in fin_data.index):
             for i in range(0, len(fin_data.loc['Selling General Administrative'])):
@@ -98,14 +98,9 @@ def get_stock_data(ticker):
                 cf_data.loc['Dividends Paid'][::-1], stock_info['financialCurrency'])
         if not fin_data.empty:
             stock_data['periods'] = fin_data.columns[::-1]
-        if stock_analysis is not None:
+        if stock_data['type'] == 'EQUITY' and rev_forecast is not None:
             if fin_data.loc['Total Revenue'][0] != 0:
-                # TWD not supported by currency converter, hard coding in the exchange rate for now
-                if stock_info['financialCurrency'] != 'TWD': 
-                    stock_data['rev_estimate'] = c.convert(stock_analysis['Revenue Estimate Avg']['+1Y'], stock_info['financialCurrency'], 'USD') / c.convert(
-                        fin_data.loc['Total Revenue'][0], stock_info['financialCurrency'], 'USD') - 1
-                else: 
-                    stock_data['rev_estimate'] = stock_analysis['Revenue Estimate Avg']['+1Y'] * 0.032 / fin_data.loc['Total Revenue'][0] * 0.032 - 1
+                stock_data['rev_estimate'] = rev_forecast['growth'].mean()
             else:
                 stock_data['rev_estimate'] = 1
 
@@ -126,7 +121,6 @@ def get_stock_data(ticker):
         #     stock_data['opex'][0] + \
         #     stock_data['other'][0] - stock_data['tax'][0]
         # assert stock_data['net_income'][0] == netincome
-        
         return stock_data
     else:
         return None

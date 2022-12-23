@@ -2694,13 +2694,15 @@ fieldset:disabled a.btn {
   clip: rect(0, 0, 0, 0);
   pointer-events: none;
 }
-.btn-check[disabled] + .btn, .btn-check:disabled + .btn {
+
+.btn-check[disabled]+.btn,
+.btn-check:disabled+.btn {
   pointer-events: none;
   filter: none;
   opacity: 0.65;
 }
 
-.btn-check:focus-visible + .btn {
+.btn-check:focus-visible+.btn {
   border-color: var(--bs-btn-hover-border-color);
   outline: 0;
   box-shadow: var(--bs-btn-focus-box-shadow);
@@ -2712,36 +2714,47 @@ fieldset:disabled a.btn {
   display: inline-flex;
   vertical-align: middle;
 }
-.btn-group > .btn,
-.btn-group-vertical > .btn {
+
+.btn-group>.btn,
+.btn-group-vertical>.btn {
   position: relative;
   flex: 1 1 auto;
 }
-.btn-group > .btn-check:checked + .btn,
-.btn-group > .btn-check:focus + .btn,
-.btn-group > .btn:hover,
-.btn-group > .btn:focus,
-.btn-group > .btn:active,
-.btn-group > .btn.active,
-.btn-group-vertical > .btn-check:checked + .btn,
-.btn-group-vertical > .btn-check:focus + .btn,
-.btn-group-vertical > .btn:hover,
-.btn-group-vertical > .btn:focus,
-.btn-group-vertical > .btn:active,
-.btn-group-vertical > .btn.active {
+
+.btn-group>.btn-check:checked+.btn,
+.btn-group>.btn-check:focus+.btn,
+.btn-group>.btn:hover,
+.btn-group>.btn:focus,
+.btn-group>.btn:active,
+.btn-group>.btn.active,
+.btn-group-vertical>.btn-check:checked+.btn,
+.btn-group-vertical>.btn-check:focus+.btn,
+.btn-group-vertical>.btn:hover,
+.btn-group-vertical>.btn:focus,
+.btn-group-vertical>.btn:active,
+.btn-group-vertical>.btn.active {
   z-index: 1;
 }
 
-.btn-check:checked + .btn, :not(.btn-check) + .btn:active, .btn:first-child:active, .btn.active, .btn.show {
+.btn-check:checked+.btn,
+:not(.btn-check)+.btn:active,
+.btn:first-child:active,
+.btn.active,
+.btn.show {
   color: var(--bs-btn-active-color);
   background-color: var(--bs-btn-active-bg);
   border-color: var(--bs-btn-active-border-color);
 }
-.btn-check:checked + .btn:focus-visible, :not(.btn-check) + .btn:active:focus-visible, .btn:first-child:active:focus-visible, .btn.active:focus-visible, .btn.show:focus-visible {
+
+.btn-check:checked+.btn:focus-visible,
+:not(.btn-check)+.btn:active:focus-visible,
+.btn:first-child:active:focus-visible,
+.btn.active:focus-visible,
+.btn.show:focus-visible {
   box-shadow: var(--bs-btn-focus-box-shadow);
 }
 
-.btn-check + .btn:hover {
+.btn-check+.btn:hover {
   color: var(--bs-btn-color);
   background-color: var(--bs-btn-bg);
   border-color: var(--bs-btn-border-color);
@@ -5778,6 +5791,7 @@ a.badge-dark.focus {
 .me-auto {
   margin-right: auto !important;
 }
+
 .ms-0 {
   margin-left: 0 !important;
 }
@@ -11218,10 +11232,10 @@ a.text-dark:focus {
 }
 
 .flash-container-main {
-  position: fixed; 
-  left: 0; 
-  right: 0; 
-  margin-left: auto; 
-  margin-right: auto; 
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
   width: 100%;
 }

@@ -1,20 +1,202 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container text-center my-5">
-    <h1>Stock Valuator</h1>
+    <h1 class="display-4">Stock Valuator</h1>
+    <h6>Conduct a stock valuation in under one minute!</h6>
 </div>
 <div class="container position-relative justify-content-center my-3">
     <form action="/search" method="POST">
         <div class="row my-5">
             <div class="col">
                 <input class="form-control form-control-lg" id="search-term" type="text"
-                    placeholder="Search for symbols (e.g. MSFT)" name="search-term" />
+                    placeholder="Search for symbols to begin (e.g. MSFT for Microsoft)" name="search-term" />
             </div>
             <div class="col-auto"><button class="btn btn-primary btn-lg" id="submitButton" type="submit">Submit</button>
             </div>
         </div>
     </form>
 </div>
+<div class="container">
+    <h4>🔥Trending Tickers🔥</h4>
+    <div class="row my-3">
+        <div class="col-4">
+            <h3>AMZN</h3><span>${{price1['cur_price']}}</span>
+            <canvas id="chart1"></canvas>
+        </div>
+        <div class="col-4">
+            <h3>GOOG</h3><span>${{price2['cur_price']}}</span>
+            <canvas id="chart2"></canvas>
+        </div>
+        <div class="col-4">
+            <h3>TSLA</h3><span>${{price3['cur_price']}}</span>
+            <canvas id="chart3"></canvas>
+        </div>
+    </div>
+</div>
+<div class="container text-center my-5">
+    <h1>How to use Stock Valuator?</h1>
 
-    
+    <div class="row my-3">
+        <div class="col-4">
+            <h3>1.</h3>
+            <p>Search for any publically traded stock by their ticker (E.g. AMZN for Amazon!).</p>
+        </div>
+        <div class="col-4">
+            <h3>2.</h3>
+            <p>Click "Start Valuation" to generate a financial model and enter your forecast!</p>
+        </div>
+        <div class="col-4">
+            <h3>3.</h3>
+            <p>Save your forecast to assign weightings to your financial forecast!</p>
+        </div>
+    </div>
+</div>
+
+<div class="container fixed-bottom">
+    <footer class="py-3">
+        <div class="nav border-bottom pb-3 mb-3">
+        </div>
+        <p class="text-center text-muted">2022 Stock Valuator</p>
+    </footer>
+</div>
+
+
+
+<script>
+    //chart 1
+    const chart1 = document.querySelector('#chart1').getContext("2d");
+    const chart_data1 = {
+        labels: {{ price1["hist_30d_dates"] | safe }},
+    datasets: [
+        {
+            yAxisID: 'yAxis',
+            xAxisID: 'xAxis',
+            data: {{ price1['hist_30d_prices']}},
+        lineTension: 0.1,
+        backgroundColor: 'rgba(11, 100, 118, 1)',
+        borderColor: 'rgba(11, 100, 118, 1)'
+                }
+    ]};
+    const config1 = {
+        type: 'line',
+        data: chart_data1,
+        options: {
+            fill: true,
+            pointRadius: 0,
+            scales: {
+                yAxis: {
+                    display: false,
+                    grid: {
+                        display: false
+                    }
+                },
+                xAxis: {
+                    display: false,
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+            }
+
+        }
+    };
+    const lineChart1 = new Chart(chart1, config1);
+
+    //chart2
+    const chart2 = document.querySelector('#chart2').getContext("2d");
+    const chart_data2 = {
+        labels: {{ price2["hist_30d_dates"] | safe }},
+    datasets: [
+        {
+            yAxisID: 'yAxis',
+            xAxisID: 'xAxis',
+            data: {{ price2['hist_30d_prices']}},
+        lineTension: 0.1,
+        backgroundColor: 'rgba(11, 100, 118, 1)',
+        borderColor: 'rgba(11, 100, 118, 1)'
+                }
+    ]};
+    const config2 = {
+        type: 'line',
+        data: chart_data2,
+        options: {
+            fill: true,
+            pointRadius: 0,
+            scales: {
+                yAxis: {
+                    display: false,
+                    grid: {
+                        display: false
+                    }
+                },
+                xAxis: {
+                    display: false,
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+            }
+
+        }
+    };
+    const lineChart2 = new Chart(chart2, config2);
+
+    const chart3 = document.querySelector('#chart3').getContext("2d");
+    const chart_data3 = {
+        labels: {{ price3["hist_30d_dates"] | safe }},
+    datasets: [
+        {
+            yAxisID: 'yAxis',
+            xAxisID: 'xAxis',
+            data: {{ price3['hist_30d_prices']}},
+        lineTension: 0.1,
+        backgroundColor: 'rgba(11, 100, 118, 1)',
+        borderColor: 'rgba(11, 100, 118, 1)'
+                }
+    ]};
+    const config3 = {
+        type: 'line',
+        data: chart_data3,
+        options: {
+            fill: true,
+            pointRadius: 0,
+            scales: {
+                yAxis: {
+                    display: false,
+                    grid: {
+                        display: false
+                    }
+                },
+                xAxis: {
+                    display: false,
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+            }
+
+        }
+    };
+    const lineChart3 = new Chart(chart3, config3);
+</script>
+
+
 {% endblock %}
