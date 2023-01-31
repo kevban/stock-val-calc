@@ -286,8 +286,10 @@ def display_stock(ticker):
                     stock_data[k] / 1000000000)  # in $ billions
             else:
                 stock_data[k] = "{:,.2f}".format(stock_data[k])  # in $
-        up_to_date = (datetime.datetime.today() -
-                      stock_data['last_updated']).seconds < 1800
+        up_to_date = ((datetime.datetime.today() -
+                      stock_data['last_updated']).seconds < 360) and\
+                      ((datetime.datetime.today() -
+                      stock_data['last_updated']).days == 0)
         return render_template('stock-details.html', data=stock_data, price=price,
                                cur_price=cur_price, forecast_data=user_forecast_data, equity=equity, up_to_date=up_to_date)
     else:
@@ -307,7 +309,7 @@ def val_summary(ticker):
         save_form = SaveForecastForm()
         forecast_data = stock.get_forecast_data()
         for k in data:  # format all % items to display nicely on UI
-            if 'avg' in k:
+            if k and 'avg' in k:
                 data[k] = "{:,.2f}".format(data[k] * 100)  # in %
         return render_template('stock-valuation.html', data=data['financials'], login_form=login_form, save_form=save_form, user=g.user, forecast_data=forecast_data, info=data, histperiod=len(data['financials']['period']))
     else:

@@ -17,32 +17,33 @@ def get_stock_data(ticker):
     fin_data = stock.financials
     cf_data = stock.get_cashflow()
     stock_info = stock.get_info()
-    stock_price = stock.fast_info['last_price']
+    stock_fastinfo = stock.fast_info
     rev_forecast = stock.get_rev_forecast()
     # Checking if stock exist by seeing if it is actively quoted
-    if (stock_info and stock_price):
-        # Removing depreciation from SG&A, combining SG&A with R&D to simplify this line item.
-        if ('Selling General Administrative' in fin_data.index):
-            for i in range(0, len(fin_data.loc['Selling General Administrative'])):
-                if 'Depreciation' in cf_data.index:
-                    fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) -
-                                                                        (cf_data.loc['Depreciation'][i] or 0), 0)
-                if 'Research Development' in fin_data.index:                                                       
-                    fin_data.loc['Selling General Administrative'][i] = max((fin_data.loc['Selling General Administrative'][i] or 0) +
-                                                                        (fin_data.loc['Research Development'][i] or 0), 0)
+    if (stock_info and stock_fastinfo['last_price']):
+        # Removing DepreciationAndAmortization from SG&A, combining SG&A with R&D to simplify this line item.
+        if ('Selling General And Administration' in fin_data.index):
+            for i in range(0, len(fin_data.loc['Selling General And Administration'])):
+                fin_data.loc['Selling General And Administration'][i] = (fin_data.loc['Gross Profit'][i] or 0) -\
+                    (cf_data.loc['DepreciationAndAmortization'][i] or 0) -\
+                    (fin_data.loc['Operating Income'][i] or 0)
+        if ('Other Income Expense' in fin_data.index):
+            for i in range(0, len(fin_data.loc['Other Income Expense'])):
+                fin_data.loc['Other Income Expense'][i] = (fin_data.loc['Pretax Income'][i] or 0) -\
+                    (fin_data.loc['Operating Income'][i] or 0)
         # Getting stock data
         stock_data = {
             # basic info
             'ticker': ticker.upper(),
-            'current_price': stock_price,
+            'current_price': stock_fastinfo.get('last_price', None),
             'target_price': stock_info.get('targetMeanPrice', None),
             'shares_out': stock_info.get('sharesOutstanding', None),
             'eps': stock_info.get('trailingEps', None),
             'beta': stock_info.get('beta', None),
-            'fifty_two_wk_low': stock_info.get('fiftyTwoWeekLow', None),
-            'fifty_two_wk_high': stock_info.get('fiftyTwoWeekHigh', None),
+            'fifty_two_wk_low': stock_fastinfo.get('year_low', None),
+            'fifty_two_wk_high': stock_fastinfo.get('year_high', None),
             'de_ratio': stock_info.get('debtToEquity', None),
-            'market_cap': stock_info.get('marketCap', None),
+            'market_cap': stock_fastinfo.get('market_cap', None),
             'type': stock_info.get('quoteType', None),
             # valuations
             'ev_ebitda': stock_info.get('enterpriseToEbitda', None),
@@ -52,10 +53,10 @@ def get_stock_data(ticker):
             'ps_ratio': stock_info.get('priceToSalesTrailing12Months', None),
             'peg_ratio': stock_info.get('pegRatio', None),
             # technicals
-            'two_hundred_day_ma': stock_info.get('twoHundredDayAverage', None),
-            'fifty_day_ma': stock_info.get('fiftyDayAverage', None),
-            'avg_volume': stock_info.get('averageVolume', None),
-            'avg_volume_10d': stock_info.get('averageVolume10days', None),
+            'two_hundred_day_ma': stock_fastinfo.get('two_hundred_day_average', None),
+            'fifty_day_ma': stock_fastinfo.get('fifty_day_average', None),
+            'avg_volume': stock_fastinfo.get('three_month_average_volume', None),
+            'avg_volume_10d': stock_fastinfo.get('ten_day_average_volume', None),
             # financials, initialize them as 0 for now, add values later for Null amounts
             'net_income': [0] * len(fin_data.columns),
             'revenue': [0] * len(fin_data.columns),
@@ -82,21 +83,21 @@ def get_stock_data(ticker):
         if 'Cost Of Revenue' in fin_data.index:
             stock_data['cogs'] = convert(
                 fin_data.loc['Cost Of Revenue'][::-1], stock_info['financialCurrency'])
-        if 'Selling General Administrative' in fin_data.index:
+        if 'Selling General And Administration' in fin_data.index:
             stock_data['opex'] = convert(
-                fin_data.loc['Selling General Administrative'][::-1], stock_info['financialCurrency'])
-        if 'Depreciation' in cf_data.index:
+                fin_data.loc['Selling General And Administration'][::-1], stock_info['financialCurrency'])
+        if 'DepreciationAndAmortization' in cf_data.index:
             stock_data['depreciation'] = convert(
-                cf_data.loc['Depreciation'][::-1], stock_info['financialCurrency'])
-        if 'Total Other Income Expense Net' in fin_data.index:
+                cf_data.loc['DepreciationAndAmortization'][::-1], stock_info['financialCurrency'])
+        if 'Other Income Expense' in fin_data.index:
             stock_data['other'] = convert(
-                fin_data.loc['Total Other Income Expense Net'][::-1], stock_info['financialCurrency'])
-        if 'Income Tax Expense' in fin_data.index:
+                fin_data.loc['Other Income Expense'][::-1], stock_info['financialCurrency'])
+        if 'Tax Provision' in fin_data.index:
             stock_data['tax'] = convert(
-                fin_data.loc['Income Tax Expense'][::-1], stock_info['financialCurrency'])
-        if 'Dividends Paid' in cf_data.index:
+                fin_data.loc['Tax Provision'][::-1], stock_info['financialCurrency'])
+        if 'CashDividendsPaid' in cf_data.index:
             stock_data['dividend'] = convert(
-                cf_data.loc['Dividends Paid'][::-1], stock_info['financialCurrency'])
+                cf_data.loc['CashDividendsPaid'][::-1], stock_info['financialCurrency'])
         if not fin_data.empty:
             stock_data['periods'] = fin_data.columns[::-1]
         if stock_data['type'] == 'EQUITY' and rev_forecast is not None:
@@ -107,25 +108,29 @@ def get_stock_data(ticker):
 
         # Getting vertical analysis
         stock_data['avg_growth'] = get_avg(stock_data['revenue'], [])
-        stock_data['avg_cogs'] = get_avg(stock_data['cogs'], stock_data['revenue'])
-        stock_data['avg_opex'] = get_avg(stock_data['opex'], stock_data['revenue'])
-        stock_data['avg_depreciation'] = get_avg(stock_data['depreciation'], stock_data['revenue'])
-        stock_data['avg_other'] = get_avg(stock_data['other'], stock_data['revenue'])
-        stock_data['avg_tax'] = get_avg(stock_data['tax'], stock_data['revenue'])
+        stock_data['avg_cogs'] = get_avg(
+            stock_data['cogs'], stock_data['revenue'])
+        stock_data['avg_opex'] = get_avg(
+            stock_data['opex'], stock_data['revenue'])
+        stock_data['avg_depreciation'] = get_avg(
+            stock_data['depreciation'], stock_data['revenue'])
+        stock_data['avg_other'] = get_avg(
+            stock_data['other'], stock_data['revenue'])
+        stock_data['avg_tax'] = get_avg(
+            stock_data['tax'], stock_data['revenue'])
         stock_data['avg_dividend'] = get_avg(stock_data['dividend'], [])
         # Bellow checks if the calculation resulted the same amount as yahoo finance.
         # However, due to limitation of API, the final stock data may not be accurate for certain stocks
         # Therefore, they are commented out for the time being
 
         # netincome = stock_data['revenue'][0] - \
-        #     stock_data['cogs'][0] - stock_data['depreciation'][0] - \
+        #     stock_data['cogs'][0] - stock_data['DepreciationAndAmortization'][0] - \
         #     stock_data['opex'][0] + \
         #     stock_data['other'][0] - stock_data['tax'][0]
         # assert stock_data['net_income'][0] == netincome
         return stock_data
     else:
         return None
-
 
 
 def get_price(symbol):
@@ -157,6 +162,7 @@ def get_price(symbol):
             'cur_price': cur_price
         }
 
+
 def convert(fin, cur):
     """Takes a dataframe, convert its rows to USD"""
 
@@ -168,7 +174,8 @@ def convert(fin, cur):
     else:
         for i in range(len(new_df)):
             new_df[i] = c.convert(new_df[i], cur, 'USD')
-    return new_df.astype(float) # casting the type to float, as sometimes type can change after conversion
+    # casting the type to float, as sometimes type can change after conversion
+    return new_df.astype(float)
 
 
 def get_avg(item, rev):
