@@ -17,9 +17,10 @@ def get_stock_data(ticker):
     fin_data = stock.financials
     cf_data = stock.get_cashflow()
     stock_info = stock.get_info()
+    stock_price = stock.fast_info['last_price']
     rev_forecast = stock.get_rev_forecast()
     # Checking if stock exist by seeing if it is actively quoted
-    if (stock_info and stock_info['regularMarketPrice']):
+    if (stock_info and stock_price):
         # Removing depreciation from SG&A, combining SG&A with R&D to simplify this line item.
         if ('Selling General Administrative' in fin_data.index):
             for i in range(0, len(fin_data.loc['Selling General Administrative'])):
@@ -33,7 +34,7 @@ def get_stock_data(ticker):
         stock_data = {
             # basic info
             'ticker': ticker.upper(),
-            'current_price': stock_info.get('regularMarketPrice', None),
+            'current_price': stock_price,
             'target_price': stock_info.get('targetMeanPrice', None),
             'shares_out': stock_info.get('sharesOutstanding', None),
             'eps': stock_info.get('trailingEps', None),
