@@ -21,7 +21,7 @@ By searching any stock ticker, the app will quickly pull up historical financial
 - Building multiple models to reflect different scenarios for one stock.  
 ![screenshot](/docs/screenshot5.JPG)
 ## Tech stack
-- Frontend - JavaScript, HTML, CSS (bootstrapped).
+- Frontend - JavaScript, HTML, CSS, Bootstrap.
 - Backend - Python Flask.
 - Database - PostgreSQL
 - FinanceAPI - [yfinance](https://github.com/ranaroussi/yfinance)
