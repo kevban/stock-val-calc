@@ -40,10 +40,10 @@ def get_stock_data(ticker):
             'shares_out': stock_info.get('sharesOutstanding', None),
             'eps': stock_info.get('trailingEps', None),
             'beta': stock_info.get('beta', None),
-            'fifty_two_wk_low': stock_fastinfo.get('year_low', None),
-            'fifty_two_wk_high': stock_fastinfo.get('year_high', None),
+            'fifty_two_wk_low': stock_fastinfo.get('yearLow', None),
+            'fifty_two_wk_high': stock_fastinfo.get('yearHigh', None),
             'de_ratio': stock_info.get('debtToEquity', None),
-            'market_cap': stock_fastinfo.get('market_cap', None),
+            'market_cap': stock_fastinfo.get('marketCap', None),
             'type': stock_fastinfo.get('quoteType', None),
             # valuations
             'ev_ebitda': stock_info.get('enterpriseToEbitda', None),
@@ -53,10 +53,10 @@ def get_stock_data(ticker):
             'ps_ratio': stock_info.get('priceToSalesTrailing12Months', None),
             'peg_ratio': stock_info.get('pegRatio', None),
             # technicals
-            'two_hundred_day_ma': stock_fastinfo.get('two_hundred_day_average', None),
-            'fifty_day_ma': stock_fastinfo.get('fifty_day_average', None),
-            'avg_volume': stock_fastinfo.get('three_month_average_volume', None),
-            'avg_volume_10d': stock_fastinfo.get('ten_day_average_volume', None),
+            'two_hundred_day_ma': stock_fastinfo.get('twoHundredDayAverage', None),
+            'fifty_day_ma': stock_fastinfo.get('fiftyDayAverage', None),
+            'avg_volume': stock_fastinfo.get('threeMonthAverageVolume', None),
+            'avg_volume_10d': stock_fastinfo.get('tenDayAverageVolume', None),
             # financials, initialize them as 0 for now, add values later for Null amounts
             'net_income': [0] * len(fin_data.columns),
             'revenue': [0] * len(fin_data.columns),
