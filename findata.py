@@ -1,7 +1,7 @@
-from ast import Raise
-from helper import *
 import yfinance as yf
 from currency_converter import CurrencyConverter
+from helper import *
+
 
 c = CurrencyConverter()
 
@@ -44,7 +44,7 @@ def get_stock_data(ticker):
             'fifty_two_wk_high': stock_fastinfo.get('year_high', None),
             'de_ratio': stock_info.get('debtToEquity', None),
             'market_cap': stock_fastinfo.get('market_cap', None),
-            'type': stock_info.get('quoteType', None),
+            'type': stock_fastinfo.get('quoteType', None),
             # valuations
             'ev_ebitda': stock_info.get('enterpriseToEbitda', None),
             'ev_sales': stock_info.get('enterpriseToRevenue', None),
