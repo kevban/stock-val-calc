@@ -341,3 +341,13 @@ def api_save_forecast():
         return (forecast, 201)
     else:
         return (None, 401)  # return unauthorized if not signed in
+
+@app.errorhandler(404)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('notfound.html', term='this page')
+
+@app.errorhandler(500)
+def page_not_found(e):
+    # render an error page if error occurs (usually due to yfinance)
+    return render_template('error.html')
